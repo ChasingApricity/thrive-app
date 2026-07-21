@@ -344,9 +344,9 @@ export default function Assessment() {
                     <p className="text-5xl font-extrabold text-blue-500">{answers.waterGlasses}</p>
                     <p className="text-gray-500 font-medium text-sm mt-1">glass{answers.waterGlasses === 1 ? '' : 'es'} a day</p>
                     
-                    {/* OUR NEW DYNAMIC MESSAGES */}
-                    {answers.waterGlasses >= 8 && <p className="text-primary font-bold text-sm mt-1">Awesome hydration habit! 🌟</p>}
-                    {answers.waterGlasses >= 4 && answers.waterGlasses <= 7 && <p className="text-blue-500 font-bold text-sm mt-1">A great start to staying refreshed. 🌊</p>}
+                    {/* DYNAMIC MESSAGES UPDATED FOR 7 GLASSES */}
+                    {answers.waterGlasses >= 7 && <p className="text-primary font-bold text-sm mt-1">Awesome hydration habit! 🌟</p>}
+                    {answers.waterGlasses >= 4 && answers.waterGlasses <= 6 && <p className="text-blue-500 font-bold text-sm mt-1">A great start to staying refreshed. 🌊</p>}
                     {answers.waterGlasses < 4 && <p className="text-emerald-500 font-bold text-sm mt-1">Thanks for watering your body today. 🌱</p>}
                     
                   </motion.div>
