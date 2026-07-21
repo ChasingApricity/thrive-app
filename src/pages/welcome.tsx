@@ -70,10 +70,8 @@ function ThriveLogo() {
 
 export default function Welcome() {
   const [, setLocation] = useLocation();
-  // This is our new safe switch! It starts as 'false' (showing login buttons)
   const [showBridge, setShowBridge] = useState(false);
 
-  // When they click a login button, flip the switch to 'true' instead of leaving the page
   const handleLoginClick = () => {
     setShowBridge(true);
   };
@@ -96,7 +94,6 @@ export default function Welcome() {
 
         <h1 className="text-4xl font-extrabold text-primary mb-3">Thrive</h1>
 
-        {/* If showBridge is false, show the login buttons. If true, show the welcome text! */}
         {!showBridge ? (
           <>
             <p className="text-lg text-primary/80 font-medium mb-12">
@@ -130,7 +127,7 @@ export default function Welcome() {
             animate={{ opacity: 1, y: 0 }}
             className="w-full flex flex-col items-center"
           >
-            <h2 className="text-2xl font-bold text-primary mb-4">Welcome to your safe space.</h2>
+            <h2 className="text-2xl font-bold text-primary mb-4">Take a deep breath.</h2>
             <p className="text-md text-primary/80 font-medium mb-8 leading-relaxed">
               Let's take a quick 8-question check-in to personalize your daily guide. There are no right or wrong answers.
             </p>
