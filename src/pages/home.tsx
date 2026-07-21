@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { useLocation } from 'wouter';
 import { Page } from '@/components/layout/page';
 import { Card } from '@/components/ui/card';
@@ -72,7 +72,6 @@ function VitalityBanner() {
         </div>
 
         <div className="flex items-center gap-3 mb-3">
-          {/* Level badge */}
           <div
             className="w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0 border-2"
             style={{ backgroundColor: current.color + '30', borderColor: current.color + '60' }}
@@ -96,7 +95,6 @@ function VitalityBanner() {
           <ChevronRight size={16} className="text-gray-300 shrink-0" />
         </div>
 
-        {/* Progress bar */}
         {next && (
           <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
             <motion.div
@@ -124,7 +122,6 @@ export default function Home() {
   if (hour < 12) greeting = 'Good morning';
   else if (hour < 17) greeting = 'Good afternoon';
   
-  // Cleanly handles if the user hasn't set their name yet
   const displayName = user?.name ? `, ${user.name}` : '';
 
   const stressInfo = getStressInfo(a?.stress || 'Calm');
@@ -137,6 +134,31 @@ export default function Home() {
     { label: 'Gut',     value: gut.label,                                  emoji: '🥗',                            color: gut.color },
     { label: 'Water',   value: `${a?.waterGlasses || 4}/8`,               emoji: '💧',                            color: 'bg-cyan-50 text-cyan-700' },
   ];
+
+  // 🖱️ DRAG TO SCROLL LOGIC FOR LAPTOPS
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    if (scrollRef.current) {
+      setStartX(e.pageX - scrollRef.current.offsetLeft);
+      setScrollLeft(scrollRef.current.scrollLeft);
+    }
+  };
+
+  const handleMouseLeave = () => setIsDragging(false);
+  const handleMouseUp = () => setIsDragging(false);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !scrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX) * 1.5; // Controls drag speed
+    scrollRef.current.scrollLeft = scrollLeft - walk;
+  };
 
   return (
     <Page className="pt-12 px-6 bg-[#FAFAFA]">
@@ -157,8 +179,18 @@ export default function Home() {
         </span>
       </div>
 
-      {/* Horizontal Snapshots */}
-      <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-6 -mx-6 px-6 snap-x">
+      {/* Horizontal Snapshots (Now with Laptop Click-and-Drag Support!) */}
+      <div 
+        ref={scrollRef}
+        onMouseDown={handleMouseDown}
+        onMouseLeave={handleMouseLeave}
+        onMouseUp={handleMouseUp}
+        onMouseMove={handleMouseMove}
+        className={cn(
+          "flex gap-3 overflow-x-auto hide-scrollbar pb-6 -mx-6 px-6 snap-x",
+          isDragging ? "cursor-grabbing snap-none" : "cursor-grab"
+        )}
+      >
         {snapshots.map((snap, i) => (
           <motion.div
             key={i}
@@ -166,7 +198,7 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.07 }}
           >
-            <Card className={cn('min-w-[110px] snap-center shrink-0 p-4 border-none shadow-sm flex flex-col gap-2', snap.color)}>
+            <Card className={cn('min-w-[110px] snap-center shrink-0 p-4 border-none shadow-sm flex flex-col gap-2', snap.color, 'pointer-events-none select-none')}>
               <div className="text-2xl">{snap.emoji}</div>
               <div>
                 <div className="text-[10px] font-bold opacity-60 uppercase tracking-wider">{snap.label}</div>
