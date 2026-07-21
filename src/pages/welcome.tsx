@@ -3,6 +3,9 @@ import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Page } from '@/components/layout/page';
 import { motion } from 'framer-motion';
+import { FaApple } from 'react-icons/fa';
+import { FcGoogle } from 'react-icons/fc';
+import { MdEmail } from 'react-icons/md';
 
 function ThriveLogo() {
   return (
@@ -86,27 +89,27 @@ export default function Welcome() {
 
         <h1 className="text-4xl font-extrabold text-primary mb-3">Thrive</h1>
         <p className="text-lg text-primary/80 font-medium mb-12">
-          Your daily guide to feeling good.
+          Untangling food and feelings, without the pressure of perfection.
         </p>
 
         <div className="w-full space-y-4">
           <Button
-            className="w-full bg-white text-foreground hover:bg-gray-50 border border-gray-100"
+            className="w-full bg-white text-foreground hover:bg-gray-50 border border-gray-100 flex items-center justify-center"
             onClick={() => setLocation('/assessment')}
           >
-            <span className="mr-2">🍏</span> Continue with Apple
+            <FaApple className="mr-2 text-xl" /> Continue with Apple
           </Button>
           <Button
-            className="w-full bg-white text-foreground hover:bg-gray-50 border border-gray-100"
+            className="w-full bg-white text-foreground hover:bg-gray-50 border border-gray-100 flex items-center justify-center"
             onClick={() => setLocation('/assessment')}
           >
-            <span className="mr-2">🌍</span> Continue with Google
+            <FcGoogle className="mr-2 text-xl" /> Continue with Google
           </Button>
           <Button
-            className="w-full bg-primary text-white"
+            className="w-full bg-primary text-white flex items-center justify-center"
             onClick={() => setLocation('/assessment')}
           >
-            <span className="mr-2">✉️</span> Continue with Email
+            <MdEmail className="mr-2 text-xl" /> Continue with Email
           </Button>
         </div>
 
