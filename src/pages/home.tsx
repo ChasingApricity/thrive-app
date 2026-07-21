@@ -118,6 +118,15 @@ export default function Home() {
   const { user } = useAppContext();
   const a = user.assessment;
 
+  // 🕒 DYNAMIC GREETING LOGIC
+  const hour = new Date().getHours();
+  let greeting = 'Good evening';
+  if (hour < 12) greeting = 'Good morning';
+  else if (hour < 17) greeting = 'Good afternoon';
+  
+  // Cleanly handles if the user hasn't set their name yet
+  const displayName = user?.name ? `, ${user.name}` : '';
+
   const stressInfo = getStressInfo(a?.stress || 'Calm');
   const gut = getGutInfo(a?.gutSymptoms || '');
 
@@ -133,13 +142,20 @@ export default function Home() {
     <Page className="pt-12 px-6 bg-[#FAFAFA]">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
         <h1 className="text-3xl font-extrabold text-gray-900 mb-1">
-          Good morning, {user.name} ✨
+          {greeting}{displayName} ✨
         </h1>
         <p className="text-gray-500 font-medium">How are we feeling today?</p>
       </motion.div>
 
       {/* Vitality Points Banner */}
       <VitalityBanner />
+
+      {/* SWIPE HINT */}
+      <div className="flex justify-end mb-2 px-1">
+        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1 opacity-70">
+          Swipe for more <ChevronRight size={10} />
+        </span>
+      </div>
 
       {/* Horizontal Snapshots */}
       <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-6 -mx-6 px-6 snap-x">
