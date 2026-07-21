@@ -343,8 +343,12 @@ export default function Assessment() {
                   <motion.div key={answers.waterGlasses} initial={{ scale: 0.8 }} animate={{ scale: 1 }}>
                     <p className="text-5xl font-extrabold text-blue-500">{answers.waterGlasses}</p>
                     <p className="text-gray-500 font-medium text-sm mt-1">glass{answers.waterGlasses === 1 ? '' : 'es'} a day</p>
-                    {answers.waterGlasses >= 8 && <p className="text-primary font-bold text-sm mt-1">Goal reached! 🎉</p>}
-                    {answers.waterGlasses < 4 && <p className="text-orange-500 font-bold text-sm mt-1">Try to aim for more 💧</p>}
+                    
+                    {/* OUR NEW DYNAMIC MESSAGES */}
+                    {answers.waterGlasses >= 8 && <p className="text-primary font-bold text-sm mt-1">Awesome hydration habit! 🌟</p>}
+                    {answers.waterGlasses >= 4 && answers.waterGlasses <= 7 && <p className="text-blue-500 font-bold text-sm mt-1">A great start to staying refreshed. 🌊</p>}
+                    {answers.waterGlasses < 4 && <p className="text-emerald-500 font-bold text-sm mt-1">Thanks for watering your body today. 🌱</p>}
+                    
                   </motion.div>
                 )}
               </div>
