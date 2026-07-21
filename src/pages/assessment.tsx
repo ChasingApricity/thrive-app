@@ -78,18 +78,17 @@ function WaterGlass({ index, selectedCount, onTap }: { index: number; selectedCo
   const isActive = index < selectedCount;
   return (
     <motion.button whileTap={{ scale: 0.9 }} onClick={onTap} className="flex flex-col items-center gap-1">
-      {/* Kept the hardware-acceleration fix for mobile devices */}
-      <div 
-        className={cn('w-9 h-12 rounded-b-xl rounded-t-sm border-2 relative overflow-hidden transition-all duration-300', isActive ? 'border-blue-400' : 'border-gray-200 bg-gray-50')}
-        style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}
-      >
+      {/* Removed the masks that caused Android glitches. */}
+      <div className={cn('w-9 h-12 rounded-b-xl rounded-t-sm border-2 relative overflow-hidden transition-all duration-300', isActive ? 'border-blue-400 bg-blue-50/50' : 'border-gray-200 bg-gray-50')}>
+        
+        {/* The water now slides UP (y-axis) instead of squishing (height), which perfectly stops Android tearing. */}
         <motion.div
           className="absolute inset-0 bg-gradient-to-t from-blue-400 to-sky-300"
-          initial={{ scaleY: 0 }}
-          animate={{ scaleY: isActive ? 0.85 : 0 }}
+          initial={{ y: '100%' }}
+          animate={{ y: isActive ? '15%' : '100%' }}
           transition={{ duration: 0.3, delay: index * 0.03 }}
-          style={{ transformOrigin: 'bottom', WebkitTransform: 'translateZ(0)' }}
         />
+        
         <div className="absolute top-1 left-1 w-1 h-4 bg-white/60 rounded-full z-10" />
       </div>
       <span className="text-[9px] font-bold text-gray-400">{index + 1}</span>
