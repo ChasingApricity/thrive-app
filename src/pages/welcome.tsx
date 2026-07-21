@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Page } from '@/components/layout/page';
@@ -70,6 +70,13 @@ function ThriveLogo() {
 
 export default function Welcome() {
   const [, setLocation] = useLocation();
+  // This is our new safe switch! It starts as 'false' (showing login buttons)
+  const [showBridge, setShowBridge] = useState(false);
+
+  // When they click a login button, flip the switch to 'true' instead of leaving the page
+  const handleLoginClick = () => {
+    setShowBridge(true);
+  };
 
   return (
     <Page className="items-center justify-center p-6 text-center bg-mint">
@@ -88,30 +95,53 @@ export default function Welcome() {
         </motion.div>
 
         <h1 className="text-4xl font-extrabold text-primary mb-3">Thrive</h1>
-        <p className="text-lg text-primary/80 font-medium mb-12">
-          Untangling food and feelings, without the pressure of perfection.
-        </p>
 
-        <div className="w-full space-y-4">
-          <Button
-            className="w-full bg-white text-foreground hover:bg-gray-50 border border-gray-100 flex items-center justify-center"
-            onClick={() => setLocation('/assessment')}
+        {/* If showBridge is false, show the login buttons. If true, show the welcome text! */}
+        {!showBridge ? (
+          <>
+            <p className="text-lg text-primary/80 font-medium mb-12">
+              Untangling food and feelings, without the pressure of perfection.
+            </p>
+
+            <div className="w-full space-y-4">
+              <Button
+                className="w-full bg-white text-foreground hover:bg-gray-50 border border-gray-100 flex items-center justify-center"
+                onClick={handleLoginClick}
+              >
+                <FaApple className="mr-2 text-xl" /> Continue with Apple
+              </Button>
+              <Button
+                className="w-full bg-white text-foreground hover:bg-gray-50 border border-gray-100 flex items-center justify-center"
+                onClick={handleLoginClick}
+              >
+                <FcGoogle className="mr-2 text-xl" /> Continue with Google
+              </Button>
+              <Button
+                className="w-full bg-primary text-white flex items-center justify-center"
+                onClick={handleLoginClick}
+              >
+                <MdEmail className="mr-2 text-xl" /> Continue with Email
+              </Button>
+            </div>
+          </>
+        ) : (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full flex flex-col items-center"
           >
-            <FaApple className="mr-2 text-xl" /> Continue with Apple
-          </Button>
-          <Button
-            className="w-full bg-white text-foreground hover:bg-gray-50 border border-gray-100 flex items-center justify-center"
-            onClick={() => setLocation('/assessment')}
-          >
-            <FcGoogle className="mr-2 text-xl" /> Continue with Google
-          </Button>
-          <Button
-            className="w-full bg-primary text-white flex items-center justify-center"
-            onClick={() => setLocation('/assessment')}
-          >
-            <MdEmail className="mr-2 text-xl" /> Continue with Email
-          </Button>
-        </div>
+            <h2 className="text-2xl font-bold text-primary mb-4">Welcome to your safe space.</h2>
+            <p className="text-md text-primary/80 font-medium mb-8 leading-relaxed">
+              Let's take a quick 8-question check-in to personalize your daily guide. There are no right or wrong answers.
+            </p>
+            <Button
+              className="w-full bg-primary text-white h-12 text-lg rounded-xl shadow-sm hover:opacity-90"
+              onClick={() => setLocation('/assessment')}
+            >
+              Start Check-in
+            </Button>
+          </motion.div>
+        )}
 
         <p className="mt-8 text-sm text-primary/60 font-medium">
           A safe space just for you. 💚
