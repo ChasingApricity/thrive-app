@@ -407,20 +407,21 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
 }
 
 // GAME 3: Build-a-Plate (Gut Health Edition)
-type FoodItem = { id: number; name: string; emoji: string; isGood: boolean };
+type FoodItem = { id: number; name: string; emoji: string; isGood: boolean; explanation: string; };
+
 const GUT_FOODS: FoodItem[] = [
-  { id: 1, name: 'Oats', emoji: '🥣', isGood: true },
-  { id: 2, name: 'Curd', emoji: '🥣', isGood: true },
-  { id: 3, name: 'Apple', emoji: '🍎', isGood: true },
-  { id: 4, name: 'Garlic', emoji: '🧄', isGood: true },
-  { id: 5, name: 'Lentils', emoji: '🍲', isGood: true },
-  { id: 6, name: 'Chia', emoji: '🌱', isGood: true },
-  { id: 7, name: 'Kimchi', emoji: '🥬', isGood: true },
-  { id: 8, name: 'Banana', emoji: '🍌', isGood: true },
-  { id: 9, name: 'Donut', emoji: '🍩', isGood: false },
-  { id: 10, name: 'Soda', emoji: '🥤', isGood: false },
-  { id: 11, name: 'Candy', emoji: '🍬', isGood: false },
-  { id: 12, name: 'Fries', emoji: '🍟', isGood: false },
+  { id: 1, name: 'Oats', emoji: '🥣', isGood: true, explanation: 'Rich in beta-glucan fiber, feeding good bacteria.' },
+  { id: 2, name: 'Curd', emoji: '🥄', isGood: true, explanation: 'Packed with live probiotics that balance your gut flora.' },
+  { id: 3, name: 'Apple', emoji: '🍎', isGood: true, explanation: 'Contains pectin, a prebiotic fiber that microbes love.' },
+  { id: 4, name: 'Garlic', emoji: '🧄', isGood: true, explanation: 'A powerful prebiotic that fuels bifidobacteria.' },
+  { id: 5, name: 'Lentils', emoji: '🍲', isGood: true, explanation: 'High in resistant starch to keep your microbiome diverse.' },
+  { id: 6, name: 'Chia', emoji: '🌱', isGood: true, explanation: 'Forms a soothing gel that aids digestion and feeds microbes.' },
+  { id: 7, name: 'Kimchi', emoji: '🥬', isGood: true, explanation: 'Fermented goodness full of beneficial lactic acid bacteria.' },
+  { id: 8, name: 'Banana', emoji: '🍌', isGood: true, explanation: 'Provides inulin and resistant starch (especially when less ripe).' },
+  { id: 9, name: 'Donut', emoji: '🍩', isGood: false, explanation: 'High in refined sugar, which feeds inflammation-causing bacteria.' },
+  { id: 10, name: 'Soda', emoji: '🥤', isGood: false, explanation: 'Artificial sweeteners and sugar can disrupt your microbiome balance.' },
+  { id: 11, name: 'Candy', emoji: '🍬', isGood: false, explanation: 'Spikes blood sugar and starves the beneficial fiber-eating bacteria.' },
+  { id: 12, name: 'Fries', emoji: '🍟', isGood: false, explanation: 'Heavy in inflammatory oils with zero fiber for your gut bugs.' },
 ];
 
 function GutHealthPlateGame({ onComplete }: { onComplete: (score: number) => void }) {
@@ -441,16 +442,26 @@ function GutHealthPlateGame({ onComplete }: { onComplete: (score: number) => voi
 
   if (status === 'done') {
     return (
-      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white/90 backdrop-blur-md rounded-3xl p-8 text-center shadow-lg border border-white/50">
-        <div className="text-6xl mb-4">{isWon ? '🦠✨' : '🦠📉'}</div>
-        <h3 className={cn("text-2xl font-extrabold mb-2", isWon ? "text-emerald-600" : "text-rose-600")}>
-          {isWon ? "Happy Microbiome!" : "Gut Bacteria are Starving!"}
+      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white/90 backdrop-blur-md rounded-3xl p-6 text-center shadow-lg border border-white/50">
+        <h3 className={cn("text-2xl font-extrabold mb-4", isWon ? "text-emerald-600" : "text-rose-600")}>
+          {isWon ? "Happy Microbiome! ✨" : "Gut Bugs are Starving! 📉"}
         </h3>
-        <p className="text-sm font-medium text-gray-700 mb-8">
-          {isWon 
-            ? `Awesome! You packed your plate with ${score}/5 prebiotic and probiotic foods. Your gut bacteria are thriving.` 
-            : `You only picked ${score}/5 gut-friendly foods. Highly processed items starve the good bacteria!`}
-        </p>
+        
+        {/* EDUCATIONAL BREAKDOWN OF SELECTED FOODS */}
+        <div className="space-y-2 mb-6 text-left h-56 overflow-y-auto pr-2 custom-scrollbar">
+          {plate.map((food, i) => (
+            <div key={i} className="flex gap-3 items-start bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+              <div className="text-2xl bg-gray-50 rounded-full w-10 h-10 flex items-center justify-center shrink-0">{food.emoji}</div>
+              <div>
+                <p className="font-bold text-sm text-gray-800 flex items-center gap-1">
+                  {food.name} {food.isGood ? <span className="text-emerald-500">✅</span> : <span className="text-rose-500">❌</span>}
+                </p>
+                <p className="text-xs text-gray-500 mt-1 leading-snug">{food.explanation}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
         <Button onClick={() => onComplete(isWon ? 4 : 0)} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">
           Continue
         </Button>
@@ -505,7 +516,7 @@ const articles = [
   {
     id: 2, emoji: '🥗', title: 'What is gut health anyway?', color: 'bg-green-50 text-green-900',
     takeaway: "Feed your gut bacteria fibre (apples, oats, curd) and they'll keep your mood and digestion balanced.", Chart: GutHealthFlow,
-    GameComponent: GutHealthPlateGame, // 🦠 NEW GAME ASSIGNED HERE!
+    GameComponent: GutHealthPlateGame, 
     questions: [
       { text: "All bacteria in your gut are bad for you.", isFact: false, explanation: "You have trillions of 'good' bacteria that digest food and create vitamins." },
       { text: "Your gut produces most of your body's serotonin.", isFact: true, explanation: "Around 90% of your 'happy hormone' is made in your digestive tract!" }
@@ -547,8 +558,6 @@ const articles = [
 
 export default function Learn() {
   const [selected, setSelected] = useState<number | null>(null);
-  
-  // 🧠 State Machine for our Double-Feature Engine
   const [playState, setPlayState] = useState<'idle' | 'playing_custom' | 'transition' | 'playing_quiz' | 'done'>('idle');
   const [sliderScore, setSliderScore] = useState(0);
   const [quizScore, setQuizScore] = useState(0);
