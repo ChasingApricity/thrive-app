@@ -3,6 +3,7 @@ import { Page } from '@/components/layout/page';
 import { Card } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import { useAppContext } from '@/hooks/useAppContext';
+import { cn } from '@/lib/utils';
 import {
   RadarChart,
   PolarGrid,
@@ -114,7 +115,7 @@ export default function Insights() {
   };
 
   return (
-    <Page className="p-6 pt-12 bg-gray-50">
+    <Page className="p-6 pt-12 pb-24 bg-gray-50">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="text-3xl font-extrabold text-gray-900 mb-2">Insights</h1>
         <p className="text-gray-500 text-sm font-medium mb-8">How you're doing — beyond the scale.</p>
@@ -163,7 +164,7 @@ export default function Insights() {
         </Card>
       )}
 
-      {/* ── This Week (Now with Laptop Click-and-Drag Support!) ── */}
+      {/* ── This Week ── */}
       <h2 className="text-lg font-bold mb-4 text-gray-700">This Week</h2>
       <div 
         ref={scrollRef}
@@ -171,10 +172,17 @@ export default function Insights() {
         onMouseLeave={handleMouseLeave}
         onMouseUp={handleMouseUp}
         onMouseMove={handleMouseMove}
-        className={`flex gap-4 overflow-x-auto hide-scrollbar pb-6 -mx-6 px-6 snap-x ${isDragging ? "cursor-grabbing snap-none" : "cursor-grab"}`}
+        className={cn(
+          "flex gap-4 overflow-x-auto hide-scrollbar pb-6 -mx-6 px-6",
+          // The fix: snap-x is now completely disabled while dragging
+          isDragging ? "cursor-grabbing snap-none" : "cursor-grab snap-x"
+        )}
       >
         {weeklyInsights.map((insight, i) => (
-          <Card key={i} className={`min-w-[160px] snap-center shrink-0 p-5 border-none shadow-sm ${insight.bg} flex flex-col justify-between h-40 pointer-events-none select-none`}>
+          <Card key={i} className={cn(
+            "min-w-[160px] snap-center shrink-0 p-5 border-none shadow-sm flex flex-col justify-between h-40 pointer-events-none select-none",
+            insight.bg
+          )}>
             <div className="text-4xl">{insight.emoji}</div>
             <div>
               <div className={`font-bold text-lg leading-tight ${insight.color}`}>{insight.title}</div>
