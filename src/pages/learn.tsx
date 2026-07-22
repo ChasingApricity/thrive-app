@@ -563,10 +563,10 @@ function HydrationGame({ onComplete }: { onComplete: (score: number) => void }) 
   );
 }
 
-// GAME 5: Sleep Hygiene Builder
+// GAME 5: Sleep Stage Builder (The Circadian Clock)
 type SleepHabit = { id: number; name: string; emoji: string; isDeepSleep: boolean; tip: string; };
 const SLEEP_HABITS: SleepHabit[] = [
-  { id: 1, name: 'Magnesium', emoji: '💊', isDeepSleep: true, tip: 'Relaxes nervous system and promotes deep slow-wave sleep.' },
+  { id: 1, name: 'Magnesium Intake', emoji: '💊', isDeepSleep: true, tip: 'Relaxes your nervous system and promotes deep slow-wave sleep.' },
   { id: 2, name: 'Cool Room (18°C)', emoji: '❄️', isDeepSleep: true, tip: 'Signals your core body temperature to drop for restorative sleep.' },
   { id: 3, name: 'Reading a Book', emoji: '📖', isDeepSleep: true, tip: 'Reduces cortisol and transitions your brain waves into relaxation.' },
   { id: 4, name: 'Screen in Bed', emoji: '📱', isDeepSleep: false, tip: 'Blue light blocks melatonin production, delaying deep sleep cycles.' },
@@ -575,82 +575,97 @@ const SLEEP_HABITS: SleepHabit[] = [
 ];
 
 function SleepGame({ onComplete }: { onComplete: (score: number) => void }) {
-  const [selected, setSelected] = useState<SleepHabit[]>([]);
-  const [status, setStatus] = useState<'playing' | 'done'>('playing');
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [score, setScore] = useState(0);
+  const [status, setStatus] = useState<'playing' | 'feedback' | 'done'>('playing');
+  const [lastSortCorrect, setLastSortCorrect] = useState(false);
 
-  const toggleHabit = (habit: SleepHabit) => {
-    if (status === 'playing') {
-      if (selected.some(h => h.id === habit.id)) {
-        setSelected(selected.filter(h => h.id !== habit.id));
-      } else if (selected.length < 3) {
-        setSelected([...selected, habit]);
-      }
+  const currentHabit = SLEEP_HABITS[currentIndex];
+
+  const handleSort = (guessedDeepSleep: boolean) => {
+    const isCorrect = guessedDeepSleep === currentHabit.isDeepSleep;
+    setLastSortCorrect(isCorrect);
+    if (isCorrect) setScore(s => s + 1);
+    setStatus('feedback');
+  };
+
+  const handleNext = () => {
+    if (currentIndex < SLEEP_HABITS.length - 1) {
+      setCurrentIndex(i => i + 1);
+      setStatus('playing');
+    } else {
+      setStatus('done');
     }
   };
 
-  const correctCount = selected.filter(h => h.isDeepSleep).length;
-  const isWon = correctCount >= 2;
-
   if (status === 'done') {
     return (
-      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white/90 backdrop-blur-md rounded-3xl p-6 text-center shadow-lg border border-white/50">
-        <h3 className={cn("text-2xl font-extrabold mb-4", isWon ? "text-indigo-600" : "text-rose-600")}>
-          {isWon ? "Restorative Sleep Secured! 😴" : "Sleep Architecture Wrecked! 📉"}
-        </h3>
-        <div className="space-y-2 mb-6 text-left h-56 overflow-y-auto pr-2 custom-scrollbar">
-          {selected.map((habit, i) => (
-            <div key={i} className="flex gap-3 items-start bg-white p-3 rounded-xl shadow-sm border border-gray-100">
-              <div className="text-2xl bg-gray-50 rounded-full w-10 h-10 flex items-center justify-center shrink-0">{habit.emoji}</div>
-              <div>
-                <p className="font-bold text-sm text-gray-800 flex items-center gap-1">
-                  {habit.name} {habit.isDeepSleep ? <span className="text-emerald-500">✅</span> : <span className="text-rose-500">❌</span>}
-                </p>
-                <p className="text-xs text-gray-500 mt-1 leading-snug">{habit.tip}</p>
-              </div>
-            </div>
-          ))}
+      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white/90 backdrop-blur-md rounded-3xl p-8 text-center shadow-lg border border-white/50">
+        <div className="text-6xl mb-4">🌙</div>
+        <h3 className="text-2xl font-extrabold mb-2 text-indigo-800">Clock Reset!</h3>
+        <p className="text-sm font-medium text-gray-700 mb-6">
+          You sorted <strong>{score}/6</strong> habits correctly! By mastering your sleep architecture, you allow your brain to reach deep sleep. 
+        </p>
+        <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 mb-8 text-left">
+          <p className="text-xs text-indigo-900 font-bold mb-1">🧠 The Hormone Reset:</p>
+          <p className="text-xs text-indigo-700 leading-relaxed">
+            Deep sleep is when your body repairs itself. It lowers <strong>ghrelin</strong> (the hormone that makes you hungry) and raises <strong>leptin</strong> (the hormone that makes you feel full). Good sleep stops tomorrow's cravings before they start!
+          </p>
         </div>
-        <Button onClick={() => onComplete(isWon ? 4 : 0)} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">Continue</Button>
+        <Button onClick={() => onComplete(score > 3 ? 4 : 1)} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">Continue</Button>
       </motion.div>
     );
   }
 
   return (
-    <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-lg border border-white/50 text-center relative">
-      <p className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2">Sleep Hygiene Builder</p>
-      <p className="text-sm font-medium text-gray-600 mb-6">Select your 3 bedtime habits tonight:</p>
+    <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-lg border border-white/50 text-center relative overflow-hidden">
+      <p className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2">The Circadian Clock</p>
       
-      <div className="grid grid-cols-2 gap-2 mb-6">
-        {SLEEP_HABITS.map(habit => {
-          const isSelected = selected.some(h => h.id === habit.id);
-          return (
-            <motion.button 
-              key={habit.id}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => toggleHabit(habit)}
-              className={cn(
-                "p-3 rounded-2xl border text-left flex items-center gap-3 transition-all shadow-sm",
-                isSelected ? "bg-indigo-50 border-indigo-500 ring-2 ring-indigo-200" : "bg-gray-50 border-gray-100"
-              )}
-            >
-              <span className="text-2xl">{habit.emoji}</span>
-              <span className="text-xs font-bold text-gray-700 leading-tight">{habit.name}</span>
-            </motion.button>
-          );
-        })}
+      <AnimatePresence mode="wait">
+        {status === 'playing' ? (
+          <motion.div key="playing" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+            <p className="text-sm font-medium text-gray-600 mb-6">Sort this habit into the correct category:</p>
+            
+            <div className="bg-white border-2 border-indigo-100 rounded-2xl p-6 mb-8 text-center shadow-sm">
+              <span className="text-5xl block mb-3">{currentHabit.emoji}</span>
+              <h3 className="text-xl font-extrabold text-gray-800">{currentHabit.name}</h3>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <Button onClick={() => handleSort(false)} className="bg-rose-50 hover:bg-rose-100 text-rose-800 font-bold h-20 rounded-2xl border border-rose-200 flex flex-col gap-1 shadow-sm whitespace-normal p-2">
+                <span className="text-xl">📉</span>
+                <span className="text-xs leading-tight">Wrecks Sleep Architecture</span>
+              </Button>
+              <Button onClick={() => handleSort(true)} className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold h-20 rounded-2xl border border-emerald-200 flex flex-col gap-1 shadow-sm whitespace-normal p-2">
+                <span className="text-xl">😴</span>
+                <span className="text-xs leading-tight">Helps Deep Sleep</span>
+              </Button>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div key="feedback" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+            <div className="flex justify-center mb-4">
+              {lastSortCorrect ? <CheckCircle2 size={48} className="text-emerald-500" /> : <XCircle size={48} className="text-rose-500" />}
+            </div>
+            <h3 className={cn("text-xl font-extrabold mb-2", lastSortCorrect ? "text-emerald-600" : "text-rose-600")}>
+              {lastSortCorrect ? "Spot On!" : "Not Quite!"}
+            </h3>
+            <p className="text-sm font-medium text-gray-700 mb-8">{currentHabit.tip}</p>
+            <Button onClick={handleNext} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">
+              {currentIndex < SLEEP_HABITS.length - 1 ? 'Next Habit' : 'Finish Sorting'}
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      <div className="mt-6 flex justify-center gap-1">
+        {SLEEP_HABITS.map((_, i) => (
+          <div key={i} className={cn("h-1.5 rounded-full transition-all", i <= currentIndex ? "w-4 bg-indigo-500" : "w-1.5 bg-gray-200")} />
+        ))}
       </div>
-
-      <Button 
-        disabled={selected.length < 3}
-        onClick={() => setStatus('done')} 
-        className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white disabled:opacity-50"
-      >
-        Lock In Routine ({selected.length}/3)
-      </Button>
     </div>
   );
 }
-
 // GAME 6: The Swap It Challenge (Macronutrients)
 type SwapRound = { craving: string; cravingEmoji: string; correct: string; correctEmoji: string; wrong: string; wrongEmoji: string; explanation: string };
 const SWAP_ROUNDS: SwapRound[] = [
