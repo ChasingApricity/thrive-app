@@ -7,11 +7,16 @@ import { ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useAppContext } from '@/hooks/useAppContext'; // 👈 We added this to get water & stress data!
 
 export default function NightReflection() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   
+  // 👈 Bringing in the user's past data
+  const { user } = useAppContext(); 
+  const a = user.assessment; 
+
   const [mood, setMood] = useState('🙂');
   const [symptoms, setSymptoms] = useState<string[]>([]);
   const [gratitude, setGratitude] = useState('');
@@ -36,6 +41,20 @@ export default function NightReflection() {
     });
     setLocation('/home');
   };
+
+  // 🧠 DYNAMIC SUMMARY LOGIC
+  // 1. Give the mood a text label
+  const moodText = {'😔': 'Rough', '😕': 'Meh', '🙂': 'Good', '😊': 'Great', '🤩': 'Amazing'}[mood] || 'Good';
+  
+  // 2. Check if gut is happy or symptomatic
+  const isHappyGut = symptoms.length === 0 || symptoms.includes('None');
+  const gutSummary = isHappyGut ? 'Happy Gut' : `${symptoms.length} Symptom${symptoms.length > 1 ? 's' : ''}`;
+  const gutEmoji = isHappyGut ? '✨' : '⚠️';
+
+  // 3. Pull actual stress and water from the app context
+  const stressSummary = a?.stress || 'Calm';
+  const stressEmoji = a?.stress === 'Overwhelmed' ? '😰' : a?.stress === 'Pretty stressed' ? '😟' : a?.stress === 'A bit tense' ? '🌤' : '😌';
+  const waterGlasses = a?.waterGlasses || 0;
 
   return (
     <Page className="p-6 pt-12 pb-24 bg-indigo-50">
@@ -97,10 +116,12 @@ export default function NightReflection() {
         <Card className="border-none bg-indigo-900 text-white">
           <h3 className="font-bold mb-3 text-indigo-200 uppercase text-xs tracking-wider">Today's Summary</h3>
           <div className="grid grid-cols-2 gap-4 text-sm font-medium">
-            <div className="flex items-center gap-2"><span className="text-xl">{mood}</span> Mood</div>
-            <div className="flex items-center gap-2"><span className="text-xl">😌</span> Low Stress</div>
-            <div className="flex items-center gap-2"><span className="text-xl">💧</span> 6 Glasses</div>
-            <div className="flex items-center gap-2"><span className="text-xl">✨</span> Happy Gut</div>
+            <div className="flex items-center gap-2"><span className="text-xl">{mood}</span> {moodText} Mood</div>
+            
+            {/* Now pulling dynamically from Context & State! */}
+            <div className="flex items-center gap-2 truncate"><span className="text-xl">{stressEmoji}</span> {stressSummary}</div>
+            <div className="flex items-center gap-2"><span className="text-xl">💧</span> {waterGlasses} Glasses</div>
+            <div className="flex items-center gap-2"><span className="text-xl">{gutEmoji}</span> {gutSummary}</div>
           </div>
         </Card>
       </div>
