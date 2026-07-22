@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Page } from '@/components/layout/page';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppContext } from '@/hooks/useAppContext';
 
@@ -281,6 +282,84 @@ function StressCycleFlow() {
   );
 }
 
+// ─── Mini-Game Component ───────────────────────────────────────────────────
+
+const QUIZ_QUESTIONS = [
+  { text: "Stress directly spikes your blood sugar.", isFact: true, explanation: "Cortisol triggers your liver to release glucose for quick energy!" },
+  { text: "You should only drink water when you feel thirsty.", isFact: false, explanation: "Thirst is a late sign of dehydration. Keep sipping steadily." },
+  { text: "All bacteria in your gut are bad for you.", isFact: false, explanation: "You have trillions of 'good' bacteria that digest food and create vitamins." },
+  { text: "Lack of sleep increases your hunger hormones.", isFact: true, explanation: "Poor sleep spikes ghrelin (hunger) and lowers leptin (fullness)." }
+];
+
+function MythVsFactGame({ onComplete }: { onComplete: (score: number) => void }) {
+  const [idx, setIdx] = useState(0);
+  const [score, setScore] = useState(0);
+  const [showResult, setShowResult] = useState(false);
+  const [lastGuess, setLastGuess] = useState<boolean | null>(null);
+
+  const question = QUIZ_QUESTIONS[idx];
+  const isCorrect = lastGuess === question.isFact;
+
+  const handleGuess = (guess: boolean) => {
+    setLastGuess(guess);
+    if (guess === question.isFact) setScore(s => s + 1);
+    setShowResult(true);
+  };
+
+  const handleNext = () => {
+    if (idx < QUIZ_QUESTIONS.length - 1) {
+      setIdx(i => i + 1);
+      setShowResult(false);
+    } else {
+      onComplete(score);
+    }
+  };
+
+  return (
+    <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-lg border border-white/50 text-center relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute -top-10 -right-10 text-9xl opacity-5 pointer-events-none">🧠</div>
+      
+      <p className="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-6">Myth vs Fact</p>
+      
+      <AnimatePresence mode="wait">
+        {!showResult ? (
+          <motion.div key="question" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+            <h3 className="text-xl font-extrabold text-gray-800 mb-8 leading-snug">"{question.text}"</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <Button onClick={() => handleGuess(false)} className="bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold h-14 rounded-2xl border-none">
+                Myth 🧢
+              </Button>
+              <Button onClick={() => handleGuess(true)} className="bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-bold h-14 rounded-2xl border-none">
+                Fact ✅
+              </Button>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div key="result" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+            <div className="flex justify-center mb-4">
+              {isCorrect ? <CheckCircle2 size={48} className="text-emerald-500" /> : <XCircle size={48} className="text-rose-500" />}
+            </div>
+            <h3 className={cn("text-xl font-extrabold mb-2", isCorrect ? "text-emerald-600" : "text-rose-600")}>
+              {isCorrect ? "Correct!" : "Actually..."}
+            </h3>
+            <p className="text-sm font-medium text-gray-700 mb-8">{question.explanation}</p>
+            <Button onClick={handleNext} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl">
+              {idx < QUIZ_QUESTIONS.length - 1 ? 'Next Question' : 'Finish Game'}
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      <div className="mt-6 flex justify-center gap-1">
+        {QUIZ_QUESTIONS.map((_, i) => (
+          <div key={i} className={cn("h-1.5 rounded-full transition-all", i <= idx ? "w-4 bg-indigo-500" : "w-1.5 bg-gray-200")} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Article data ───────────────────────────────────────────────────────────
 
 const articles = [
@@ -318,20 +397,30 @@ const articles = [
 
 export default function Learn() {
   const [selected, setSelected] = useState<number | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [gameScore, setGameScore] = useState<number | null>(null);
+  
   const { addPoints } = useAppContext();
   const active = articles.find(a => a.id === selected);
   const awarded = React.useRef(new Set<number>());
 
   const openArticle = (id: number) => {
     setSelected(id);
+    setIsPlaying(false);
+    setGameScore(null);
     if (!awarded.current.has(id)) {
       addPoints(5);
       awarded.current.add(id);
     }
   };
 
+  const handleGameComplete = (score: number) => {
+    setGameScore(score);
+    // Award 5 VP per correct answer!
+    if (score > 0) addPoints(score * 5); 
+  };
+
   return (
-    // ✨ ADDED pb-24 HERE TO FIX THE FOOTER OVERLAP ✨
     <Page className="p-6 pt-12 pb-24 bg-gray-50">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="text-3xl font-extrabold text-gray-900 mb-2">Learn 📚</h1>
@@ -374,26 +463,57 @@ export default function Learn() {
             className={cn('fixed inset-0 z-50 overflow-y-auto', active.color)}
           >
             <div className="p-6 pt-12 max-w-md mx-auto min-h-full pb-20">
-              <button
-                onClick={() => setSelected(null)}
-                className="bg-white/50 p-2 rounded-full mb-6 inline-flex items-center justify-center backdrop-blur-sm"
-              >
-                <ArrowLeft size={22} />
-              </button>
+              <div className="flex justify-between items-center mb-6">
+                <button
+                  onClick={() => setSelected(null)}
+                  className="bg-white/50 p-2 rounded-full inline-flex items-center justify-center backdrop-blur-sm"
+                >
+                  <ArrowLeft size={22} />
+                </button>
+                
+                {/* 🎮 The new Play Game toggle button! */}
+                {!isPlaying && gameScore === null && (
+                  <Button 
+                    onClick={() => setIsPlaying(true)}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-bold shadow-md"
+                  >
+                    Play Mini-Game 🎮
+                  </Button>
+                )}
+              </div>
 
               <div className="text-5xl mb-4">{active.emoji}</div>
               <h1 className="text-2xl font-extrabold mb-8 leading-tight">{active.title}</h1>
 
-              {/* Flowchart */}
-              <div className="bg-white/50 rounded-3xl p-5 mb-6 backdrop-blur-sm">
-                <active.Chart />
-              </div>
+              {/* Conditional Rendering: Show Game OR Flowchart */}
+              <AnimatePresence mode="wait">
+                {isPlaying ? (
+                  <motion.div key="game" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                    <MythVsFactGame onComplete={handleGameComplete} />
+                  </motion.div>
+                ) : gameScore !== null ? (
+                  <motion.div key="score" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white/90 backdrop-blur-md rounded-3xl p-8 text-center shadow-lg">
+                    <div className="text-6xl mb-4">🏆</div>
+                    <h2 className="text-2xl font-extrabold text-gray-800 mb-2">You scored {gameScore}/4!</h2>
+                    <p className="text-gray-600 font-medium mb-4">You earned <span className="font-bold text-amber-500">+{gameScore * 5} VP</span> for playing.</p>
+                    <Button onClick={() => setSelected(null)} className="w-full bg-gray-900 text-white rounded-xl">Back to Menu</Button>
+                  </motion.div>
+                ) : (
+                  <motion.div key="flowchart" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                    {/* Flowchart */}
+                    <div className="bg-white/50 rounded-3xl p-5 mb-6 backdrop-blur-sm">
+                      <active.Chart />
+                    </div>
 
-              {/* Key takeaway */}
-              <div className="bg-white/70 rounded-2xl p-5 backdrop-blur-sm">
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Key Takeaway 💡</p>
-                <p className="font-bold text-gray-800 leading-relaxed">{active.takeaway}</p>
-              </div>
+                    {/* Key takeaway */}
+                    <div className="bg-white/70 rounded-2xl p-5 backdrop-blur-sm">
+                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Key Takeaway 💡</p>
+                      <p className="font-bold text-gray-800 leading-relaxed">{active.takeaway}</p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
             </div>
           </motion.div>
         )}
