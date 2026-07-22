@@ -252,8 +252,9 @@ function StressCycleFlow() {
 
 // ─── Mini-Game Engines ───────────────────────────────────────────────────
 
-// GAME 1: Myth vs Fact Quiz
 type Question = { text: string; isFact: boolean; explanation: string; };
+
+// GAME 1: Myth vs Fact Quiz
 function MythVsFactGame({ questions, onComplete }: { questions: Question[], onComplete: (score: number) => void }) {
   const [idx, setIdx] = useState(0);
   const [score, setScore] = useState(0);
@@ -361,9 +362,7 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
             ? "When you pause to breathe or drink water, you prevent stress hormones from spiking your hunger!" 
             : "When cortisol runs wild, your brain demands fast energy (sugar). Taking a pause helps!"}
         </p>
-        <Button onClick={() => onComplete(status === 'won' ? 4 : 0)} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">
-          Continue
-        </Button>
+        <Button onClick={() => onComplete(status === 'won' ? 4 : 0)} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">Continue</Button>
       </motion.div>
     );
   }
@@ -394,7 +393,7 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
   );
 }
 
-// GAME 3: Build-a-Plate
+// GAME 3: Build-a-Plate (Gut Health)
 type FoodItem = { id: number; name: string; emoji: string; isGood: boolean; explanation: string; };
 const GUT_FOODS: FoodItem[] = [
   { id: 1, name: 'Oats', emoji: '🥣', isGood: true, explanation: 'Rich in beta-glucan fiber, feeding good bacteria.' },
@@ -476,7 +475,183 @@ function GutHealthPlateGame({ onComplete }: { onComplete: (score: number) => voi
   );
 }
 
-// GAME 4: The Swap It Challenge (Macronutrients)
+// GAME 4: Hydration Hero (Water vs Fatigue & Anxiety)
+type HydrationScenario = { prompt: string; icon: string; goodAction: string; goodExplanation: string; badAction: string; };
+const HYDRATION_ROUNDS: HydrationScenario[] = [
+  { prompt: "You feel suddenly anxious and jittery at your desk.", icon: '😰', goodAction: "Drink 2 Glasses of Water 💧", goodExplanation: "Mild cellular dehydration triggers physical stress responses that your brain misinterprets as anxiety.", badAction: "Grab an Espresso ☕" },
+  { prompt: "Your afternoon focus is crashing and you feel sluggish.", icon: '🥱', goodAction: "Sip Coconut Water or Electrolytes 🥥", goodExplanation: "Water plus trace electrolytes instantly restores electrical signaling in your neurons.", badAction: "Eat a Sugary Snack 🍬" },
+  { prompt: "You wake up with a dull headache and a foggy brain.", icon: '🤕', goodAction: "Drink Water Before Coffee 🌊", goodExplanation: "Your brain tissue temporarily shrinks during sleep-induced dehydration; water expands it back.", badAction: "Scroll Phone in Bed 📱" }
+];
+
+function HydrationGame({ onComplete }: { onComplete: (score: number) => void }) {
+  const [round, setRound] = useState(0);
+  const [score, setScore] = useState(0);
+  const [status, setStatus] = useState<'playing' | 'feedback' | 'done'>('playing');
+  const [lastCorrect, setLastCorrect] = useState(false);
+
+  const current = HYDRATION_ROUNDS[round];
+
+  const handleChoice = (isGood: boolean) => {
+    setLastCorrect(isGood);
+    if (isGood) setScore(s => s + 1);
+    setStatus('feedback');
+  };
+
+  const handleNext = () => {
+    if (round < HYDRATION_ROUNDS.length - 1) {
+      setRound(r => r + 1);
+      setStatus('playing');
+    } else {
+      setStatus('done');
+    }
+  };
+
+  if (status === 'done') {
+    return (
+      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white/90 backdrop-blur-md rounded-3xl p-8 text-center shadow-lg border border-white/50">
+        <div className="text-6xl mb-4">🌊✨</div>
+        <h3 className="text-2xl font-extrabold mb-2 text-cyan-800">Hydration Master!</h3>
+        <p className="text-sm font-medium text-gray-700 mb-8">
+          You scored {score}/3! You now know that before reaching for caffeine or snacks, a glass of water fixes brain fog and false anxiety.
+        </p>
+        <Button onClick={() => onComplete(score > 1 ? 4 : 1)} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">Continue</Button>
+      </motion.div>
+    );
+  }
+
+  return (
+    <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-lg border border-white/50 text-center relative overflow-hidden">
+      <p className="text-xs font-bold text-cyan-600 uppercase tracking-wider mb-2">Hydration Hero</p>
+      
+      <AnimatePresence mode="wait">
+        {status === 'playing' ? (
+          <motion.div key="playing" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+            <span className="text-5xl block mb-4">{current.icon}</span>
+            <h3 className="text-lg font-bold text-gray-800 mb-6">{current.prompt}</h3>
+            
+            <div className="space-y-3">
+              <Button onClick={() => handleChoice(true)} className="w-full bg-cyan-100 hover:bg-cyan-200 text-cyan-900 font-bold h-14 rounded-2xl shadow-sm border border-cyan-200">
+                {current.goodAction}
+              </Button>
+              <Button onClick={() => handleChoice(false)} className="w-full bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold h-14 rounded-2xl shadow-sm border border-gray-200">
+                {current.badAction}
+              </Button>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div key="feedback" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+            <div className="flex justify-center mb-4">
+              {lastCorrect ? <CheckCircle2 size={48} className="text-emerald-500" /> : <XCircle size={48} className="text-rose-500" />}
+            </div>
+            <h3 className={cn("text-xl font-extrabold mb-2", lastCorrect ? "text-emerald-600" : "text-rose-600")}>
+              {lastCorrect ? "Smart Choice!" : "Not quite right!"}
+            </h3>
+            <p className="text-sm font-medium text-gray-700 mb-8">{current.goodExplanation}</p>
+            <Button onClick={handleNext} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">
+              {round < HYDRATION_ROUNDS.length - 1 ? 'Next Scenario' : 'Finish Game'}
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="mt-6 flex justify-center gap-1">
+        {HYDRATION_ROUNDS.map((_, i) => (
+          <div key={i} className={cn("h-1.5 rounded-full transition-all", i <= round ? "w-4 bg-cyan-500" : "w-1.5 bg-gray-200")} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// GAME 5: Sleep Hygiene Builder
+type SleepHabit = { id: number; name: string; emoji: string; isDeepSleep: boolean; tip: string; };
+const SLEEP_HABITS: SleepHabit[] = [
+  { id: 1, name: 'Magnesium', emoji: '💊', isDeepSleep: true, tip: 'Relaxes nervous system and promotes deep slow-wave sleep.' },
+  { id: 2, name: 'Cool Room (18°C)', emoji: '❄️', isDeepSleep: true, tip: 'Signals your core body temperature to drop for restorative sleep.' },
+  { id: 3, name: 'Reading a Book', emoji: '📖', isDeepSleep: true, tip: 'Reduces cortisol and transitions your brain waves into relaxation.' },
+  { id: 4, name: 'Screen in Bed', emoji: '📱', isDeepSleep: false, tip: 'Blue light blocks melatonin production, delaying deep sleep cycles.' },
+  { id: 5, name: 'Late Heavy Meal', emoji: '🍔', isDeepSleep: false, tip: 'Forces your gut to work overtime, elevating heart rate and ruining REM.' },
+  { id: 6, name: 'Midnight Coffee', emoji: '☕', isDeepSleep: false, tip: 'Caffeine has a 6-hour half-life that completely blocks sleep architecture.' },
+];
+
+function SleepGame({ onComplete }: { onComplete: (score: number) => void }) {
+  const [selected, setSelected] = useState<SleepHabit[]>([]);
+  const [status, setStatus] = useState<'playing' | 'done'>('playing');
+
+  const toggleHabit = (habit: SleepHabit) => {
+    if (status === 'playing') {
+      if (selected.some(h => h.id === habit.id)) {
+        setSelected(selected.filter(h => h.id !== habit.id));
+      } else if (selected.length < 3) {
+        setSelected([...selected, habit]);
+      }
+    }
+  };
+
+  const correctCount = selected.filter(h => h.isDeepSleep).length;
+  const isWon = correctCount >= 2;
+
+  if (status === 'done') {
+    return (
+      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white/90 backdrop-blur-md rounded-3xl p-6 text-center shadow-lg border border-white/50">
+        <h3 className={cn("text-2xl font-extrabold mb-4", isWon ? "text-indigo-600" : "text-rose-600")}>
+          {isWon ? "Restorative Sleep Secured! 😴" : "Sleep Architecture Wrecked! 📉"}
+        </h3>
+        <div className="space-y-2 mb-6 text-left h-56 overflow-y-auto pr-2 custom-scrollbar">
+          {selected.map((habit, i) => (
+            <div key={i} className="flex gap-3 items-start bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+              <div className="text-2xl bg-gray-50 rounded-full w-10 h-10 flex items-center justify-center shrink-0">{habit.emoji}</div>
+              <div>
+                <p className="font-bold text-sm text-gray-800 flex items-center gap-1">
+                  {habit.name} {habit.isDeepSleep ? <span className="text-emerald-500">✅</span> : <span className="text-rose-500">❌</span>}
+                </p>
+                <p className="text-xs text-gray-500 mt-1 leading-snug">{habit.tip}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        <Button onClick={() => onComplete(isWon ? 4 : 0)} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">Continue</Button>
+      </motion.div>
+    );
+  }
+
+  return (
+    <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-lg border border-white/50 text-center relative">
+      <p className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2">Sleep Hygiene Builder</p>
+      <p className="text-sm font-medium text-gray-600 mb-6">Select your 3 bedtime habits tonight:</p>
+      
+      <div className="grid grid-cols-2 gap-2 mb-6">
+        {SLEEP_HABITS.map(habit => {
+          const isSelected = selected.some(h => h.id === habit.id);
+          return (
+            <motion.button 
+              key={habit.id}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => toggleHabit(habit)}
+              className={cn(
+                "p-3 rounded-2xl border text-left flex items-center gap-3 transition-all shadow-sm",
+                isSelected ? "bg-indigo-50 border-indigo-500 ring-2 ring-indigo-200" : "bg-gray-50 border-gray-100"
+              )}
+            >
+              <span className="text-2xl">{habit.emoji}</span>
+              <span className="text-xs font-bold text-gray-700 leading-tight">{habit.name}</span>
+            </motion.button>
+          );
+        })}
+      </div>
+
+      <Button 
+        disabled={selected.length < 3}
+        onClick={() => setStatus('done')} 
+        className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white disabled:opacity-50"
+      >
+        Lock In Routine ({selected.length}/3)
+      </Button>
+    </div>
+  );
+}
+
+// GAME 6: The Swap It Challenge (Macronutrients)
 type SwapRound = { craving: string; cravingEmoji: string; correct: string; correctEmoji: string; wrong: string; wrongEmoji: string; explanation: string };
 const SWAP_ROUNDS: SwapRound[] = [
   { craving: "Sugary Donut", cravingEmoji: "🍩", correct: "Apple & Almonds", correctEmoji: "🍎🥜", wrong: "Energy Drink", wrongEmoji: "🥤", explanation: "Apples and almonds provide fiber and healthy fats, giving you steady energy instead of a rapid sugar crash!" },
@@ -539,7 +714,6 @@ function FoodSwapGame({ onComplete }: { onComplete: (score: number) => void }) {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-               {/* Fixed layout for simplicity: swapping them around visually could be done with a shuffle, but this works perfectly for the flow */}
               <Button onClick={() => handleSwap(false)} className="bg-gray-50 hover:bg-gray-100 text-gray-800 font-bold h-24 rounded-2xl border border-gray-200 flex flex-col gap-1 shadow-sm">
                 <span className="text-2xl">{current.wrongEmoji}</span>
                 <span className="text-xs">{current.wrong}</span>
@@ -599,6 +773,7 @@ const articles = [
   {
     id: 3, emoji: '💧', title: 'How hydration affects your mood', color: 'bg-cyan-50 text-cyan-900',
     takeaway: "Before deciding you need a nap or a snack — drink a glass of water first, always.", Chart: HydrationFlow,
+    GameComponent: HydrationGame, // 🌊 HYDRATION HERO ASSIGNED HERE!
     questions: [
       { text: "You should only drink water when you feel thirsty.", isFact: false, explanation: "Thirst is a late sign of dehydration. Keep sipping steadily." },
       { text: "Dehydration can masquerade as anxiety.", isFact: true, explanation: "Even mild dehydration causes physical stress that your brain misinterprets as anxiety." }
@@ -607,6 +782,7 @@ const articles = [
   {
     id: 4, emoji: '😴', title: 'Why sleep is the secret weapon', color: 'bg-indigo-50 text-indigo-900',
     takeaway: "8–9 hours isn't optional. It's when your body fixes everything else.", Chart: SleepFlow,
+    GameComponent: SleepGame, // 😴 SLEEP HYGIENE BUILDER ASSIGNED HERE!
     questions: [
       { text: "You can 'catch up' on missed sleep during the weekend.", isFact: false, explanation: "Binge-sleeping doesn't undo the metabolic damage of sleep deprivation during the week." },
       { text: "Lack of sleep increases your hunger hormones.", isFact: true, explanation: "Poor sleep spikes ghrelin (hunger) and lowers leptin (fullness)." }
@@ -615,7 +791,7 @@ const articles = [
   {
     id: 5, emoji: '🍽', title: 'Emotional vs physical hunger', color: 'bg-peach text-orange-900',
     takeaway: "Both are normal. The skill is noticing which one is talking.", Chart: HungerDecisionTree,
-    GameComponent: FoodSwapGame, // ⚖️ THE NEW SWAP GAME!
+    GameComponent: FoodSwapGame, 
     questions: [
       { text: "Physical hunger usually comes on suddenly.", isFact: false, explanation: "Physical hunger builds gradually. Emotional hunger hits you like a lightning bolt." },
       { text: "Emotional hunger rarely feels satisfied when full.", isFact: true, explanation: "Because you aren't feeding the stomach, you are trying to feed a feeling." }
