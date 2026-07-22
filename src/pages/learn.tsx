@@ -414,11 +414,30 @@ function GutHealthPlateGame({ onComplete }: { onComplete: (score: number) => voi
   const [plate, setPlate] = useState<FoodItem[]>([]);
   const [status, setStatus] = useState<'playing' | 'done'>('playing');
   
+  // New Tamagotchi State
+  const [microbeMood, setMicrobeMood] = useState<'idle' | 'happy' | 'sad'>('idle');
+  const [particles, setParticles] = useState<{id: number, emoji: string}[]>([]);
+  
   const handleTap = (food: FoodItem) => {
     if (status === 'playing' && plate.length < 5) {
       setPlate([...plate, food]);
+      
+      // Update our microbe's mood and spawn particles
+      setMicrobeMood(food.isGood ? 'happy' : 'sad');
+      
+      const newParticle = { 
+        id: Date.now(), 
+        emoji: food.isGood ? '💖' : '💨' 
+      };
+      setParticles(prev => [...prev, newParticle]);
+      
+      // Clean up the particle and reset mood after a short delay
+      setTimeout(() => setMicrobeMood('idle'), 1200);
+      setTimeout(() => setParticles(prev => prev.filter(p => p.id !== newParticle.id)), 1000);
+
+      // Finish the game if plate is full
       if (plate.length + 1 === 5) {
-        setTimeout(() => setStatus('done'), 500);
+        setTimeout(() => setStatus('done'), 1500);
       }
     }
   };
@@ -450,8 +469,45 @@ function GutHealthPlateGame({ onComplete }: { onComplete: (score: number) => voi
     );
   }
 
+  // Determine styles based on the microbe's mood
+  const getMicrobeStyle = () => {
+    if (microbeMood === 'happy') return { emoji: '🥰', bg: 'bg-emerald-100', border: 'border-emerald-300', scale: [1, 1.1, 1], rotate: [0, -10, 10, 0] };
+    if (microbeMood === 'sad') return { emoji: '🤢', bg: 'bg-rose-100', border: 'border-rose-300', scale: [1, 0.95, 1], y: [0, 4, 0] };
+    return { emoji: '🦠', bg: 'bg-green-50', border: 'border-green-200', y: [0, -4, 0] }; // Idle floating
+  };
+  
+  const mStyle = getMicrobeStyle();
+
   return (
-    <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-lg border border-white/50 text-center relative">
+    <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-lg border border-white/50 text-center relative overflow-hidden">
+      
+      {/* ─── Real-Time Microbe Pet ─── */}
+      <div className="relative h-28 flex justify-center items-center mb-2">
+        <motion.div
+          animate={microbeMood === 'idle' ? { y: mStyle.y } : { scale: mStyle.scale, rotate: mStyle.rotate, y: mStyle.y }}
+          transition={{ duration: microbeMood === 'idle' ? 2 : 0.4, repeat: microbeMood === 'idle' ? Infinity : 0 }}
+          className={cn("w-20 h-20 rounded-full flex items-center justify-center text-4xl shadow-inner border-4 transition-colors duration-300 z-10", mStyle.bg, mStyle.border)}
+        >
+          {mStyle.emoji}
+        </motion.div>
+
+        {/* Floating Particles */}
+        <AnimatePresence>
+          {particles.map(p => (
+            <motion.div
+              key={p.id}
+              initial={{ opacity: 0, y: 0, scale: 0.5, x: (Math.random() - 0.5) * 40 }}
+              animate={{ opacity: 1, y: -60, scale: 1.5, x: (Math.random() - 0.5) * 60 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.8 }}
+              className="absolute text-2xl z-0"
+            >
+              {p.emoji}
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+
       <p className="text-xs font-bold text-green-600 uppercase tracking-wider mb-2">Build a Gut-Happy Plate</p>
       <p className="text-sm font-medium text-gray-600 mb-6">Tap 5 foods to feed your microbiome!</p>
       
@@ -474,7 +530,6 @@ function GutHealthPlateGame({ onComplete }: { onComplete: (score: number) => voi
     </div>
   );
 }
-
 // GAME 4: Hydration Hero (Water vs Fatigue & Anxiety)
 type HydrationScenario = { prompt: string; icon: string; goodAction: string; goodExplanation: string; badAction: string; };
 const HYDRATION_ROUNDS: HydrationScenario[] = [
