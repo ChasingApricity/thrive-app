@@ -7,13 +7,12 @@ import { ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { useAppContext } from '@/hooks/useAppContext'; // 👈 We added this to get water & stress data!
+import { useAppContext } from '@/hooks/useAppContext';
 
 export default function NightReflection() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   
-  // 👈 Bringing in the user's past data
   const { user } = useAppContext(); 
   const a = user.assessment; 
 
@@ -46,9 +45,13 @@ export default function NightReflection() {
   // 1. Give the mood a text label
   const moodText = {'😔': 'Rough', '😕': 'Meh', '🙂': 'Good', '😊': 'Great', '🤩': 'Amazing'}[mood] || 'Good';
   
-  // 2. Check if gut is happy or symptomatic
+  // 2. Check if gut is happy or symptomatic (UPDATED LABELS)
   const isHappyGut = symptoms.length === 0 || symptoms.includes('None');
-  const gutSummary = isHappyGut ? 'Happy Gut' : `${symptoms.length} Symptom${symptoms.length > 1 ? 's' : ''}`;
+  const gutSummary = isHappyGut 
+    ? 'Happy Gut' 
+    : symptoms.length === 1 
+      ? `Gut: ${symptoms[0]}` 
+      : `${symptoms.length} Gut Symptoms`;
   const gutEmoji = isHappyGut ? '✨' : '⚠️';
 
   // 3. Pull actual stress and water from the app context
@@ -117,8 +120,6 @@ export default function NightReflection() {
           <h3 className="font-bold mb-3 text-indigo-200 uppercase text-xs tracking-wider">Today's Summary</h3>
           <div className="grid grid-cols-2 gap-4 text-sm font-medium">
             <div className="flex items-center gap-2"><span className="text-xl">{mood}</span> {moodText} Mood</div>
-            
-            {/* Now pulling dynamically from Context & State! */}
             <div className="flex items-center gap-2 truncate"><span className="text-xl">{stressEmoji}</span> {stressSummary}</div>
             <div className="flex items-center gap-2"><span className="text-xl">💧</span> {waterGlasses} Glasses</div>
             <div className="flex items-center gap-2"><span className="text-xl">{gutEmoji}</span> {gutSummary}</div>
