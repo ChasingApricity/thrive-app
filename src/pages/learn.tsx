@@ -333,7 +333,7 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
         return t - 1;
       });
       setLevel(l => {
-        const newLevel = l + 12; // Cortisol rises fast!
+        const newLevel = l + 12; 
         if (newLevel >= 100) {
           setStatus('lost');
           return 100;
@@ -379,7 +379,6 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
         <span className={level > 75 ? "text-red-500" : ""}>{level}%</span>
       </div>
       
-      {/* Cortisol Bar */}
       <div className="h-6 w-full bg-gray-200 rounded-full overflow-hidden mb-8 shadow-inner border border-gray-100">
         <motion.div 
           className="h-full"
@@ -407,6 +406,90 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
   );
 }
 
+// GAME 3: Build-a-Plate (Gut Health Edition)
+type FoodItem = { id: number; name: string; emoji: string; isGood: boolean };
+const GUT_FOODS: FoodItem[] = [
+  { id: 1, name: 'Oats', emoji: '🥣', isGood: true },
+  { id: 2, name: 'Curd', emoji: '🥣', isGood: true },
+  { id: 3, name: 'Apple', emoji: '🍎', isGood: true },
+  { id: 4, name: 'Garlic', emoji: '🧄', isGood: true },
+  { id: 5, name: 'Lentils', emoji: '🍲', isGood: true },
+  { id: 6, name: 'Chia', emoji: '🌱', isGood: true },
+  { id: 7, name: 'Kimchi', emoji: '🥬', isGood: true },
+  { id: 8, name: 'Banana', emoji: '🍌', isGood: true },
+  { id: 9, name: 'Donut', emoji: '🍩', isGood: false },
+  { id: 10, name: 'Soda', emoji: '🥤', isGood: false },
+  { id: 11, name: 'Candy', emoji: '🍬', isGood: false },
+  { id: 12, name: 'Fries', emoji: '🍟', isGood: false },
+];
+
+function GutHealthPlateGame({ onComplete }: { onComplete: (score: number) => void }) {
+  const [plate, setPlate] = useState<FoodItem[]>([]);
+  const [status, setStatus] = useState<'playing' | 'done'>('playing');
+  
+  const handleTap = (food: FoodItem) => {
+    if (status === 'playing' && plate.length < 5) {
+      setPlate([...plate, food]);
+      if (plate.length + 1 === 5) {
+        setTimeout(() => setStatus('done'), 500);
+      }
+    }
+  };
+
+  const score = plate.filter(f => f.isGood).length;
+  const isWon = score >= 3;
+
+  if (status === 'done') {
+    return (
+      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white/90 backdrop-blur-md rounded-3xl p-8 text-center shadow-lg border border-white/50">
+        <div className="text-6xl mb-4">{isWon ? '🦠✨' : '🦠📉'}</div>
+        <h3 className={cn("text-2xl font-extrabold mb-2", isWon ? "text-emerald-600" : "text-rose-600")}>
+          {isWon ? "Happy Microbiome!" : "Gut Bacteria are Starving!"}
+        </h3>
+        <p className="text-sm font-medium text-gray-700 mb-8">
+          {isWon 
+            ? `Awesome! You packed your plate with ${score}/5 prebiotic and probiotic foods. Your gut bacteria are thriving.` 
+            : `You only picked ${score}/5 gut-friendly foods. Highly processed items starve the good bacteria!`}
+        </p>
+        <Button onClick={() => onComplete(isWon ? 4 : 0)} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">
+          Continue
+        </Button>
+      </motion.div>
+    );
+  }
+
+  return (
+    <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-lg border border-white/50 text-center relative">
+      <p className="text-xs font-bold text-green-600 uppercase tracking-wider mb-2">Build a Gut-Happy Plate</p>
+      <p className="text-sm font-medium text-gray-600 mb-6">Tap 5 foods to feed your microbiome!</p>
+      
+      {/* The Plate visual */}
+      <div className="flex justify-center gap-2 mb-6 h-14">
+        {[0, 1, 2, 3, 4].map(i => (
+          <div key={i} className="w-12 h-12 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center text-2xl shadow-inner">
+            {plate[i] ? <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }}>{plate[i].emoji}</motion.span> : ''}
+          </div>
+        ))}
+      </div>
+      
+      {/* Food Grid */}
+      <div className="grid grid-cols-4 gap-2 mb-2">
+        {GUT_FOODS.map(food => (
+          <motion.button 
+            key={food.id}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => handleTap(food)}
+            className="flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 p-2 rounded-xl border border-gray-100 shadow-sm"
+          >
+            <span className="text-3xl mb-1">{food.emoji}</span>
+            <span className="text-[10px] font-bold text-gray-500 uppercase">{food.name}</span>
+          </motion.button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Article Data & Unique Question Sets ────────────────────────────────────
 
 const articles = [
@@ -422,6 +505,7 @@ const articles = [
   {
     id: 2, emoji: '🥗', title: 'What is gut health anyway?', color: 'bg-green-50 text-green-900',
     takeaway: "Feed your gut bacteria fibre (apples, oats, curd) and they'll keep your mood and digestion balanced.", Chart: GutHealthFlow,
+    GameComponent: GutHealthPlateGame, // 🦠 NEW GAME ASSIGNED HERE!
     questions: [
       { text: "All bacteria in your gut are bad for you.", isFact: false, explanation: "You have trillions of 'good' bacteria that digest food and create vitamins." },
       { text: "Your gut produces most of your body's serotonin.", isFact: true, explanation: "Around 90% of your 'happy hormone' is made in your digestive tract!" }
@@ -484,7 +568,6 @@ export default function Learn() {
     }
   };
 
-  // Triggers the first game (Custom if exists, otherwise straight to Quiz)
   const startGame = () => {
     if (active?.GameComponent) {
       setPlayState('playing_custom');
@@ -493,7 +576,6 @@ export default function Learn() {
     }
   };
 
-  // Skips the bonus round and collects points
   const skipBonusRound = () => {
     setPlayState('done');
     if (sliderScore > 0) addPoints(sliderScore * 5); 
@@ -535,7 +617,6 @@ export default function Learn() {
 
               <AnimatePresence mode="wait">
                 
-                {/* 1️⃣ THE CUSTOM GAME (e.g. Cortisol Slider) */}
                 {playState === 'playing_custom' && active.GameComponent && (
                   <motion.div key="custom_game" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
                     <active.GameComponent onComplete={(score) => {
@@ -545,7 +626,6 @@ export default function Learn() {
                   </motion.div>
                 )}
 
-                {/* 2️⃣ THE BRIDGE / TRANSITION SCREEN */}
                 {playState === 'transition' && (
                   <motion.div key="transition" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white/90 backdrop-blur-md rounded-3xl p-8 text-center shadow-lg border border-white/50">
                     <div className="text-6xl mb-4">🎁</div>
@@ -562,7 +642,6 @@ export default function Learn() {
                   </motion.div>
                 )}
 
-                {/* 3️⃣ THE KNOWLEDGE QUIZ */}
                 {playState === 'playing_quiz' && (
                   <motion.div key="quiz" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
                     <MythVsFactGame questions={active.questions || []} onComplete={(score) => {
@@ -574,7 +653,6 @@ export default function Learn() {
                   </motion.div>
                 )}
 
-                {/* 4️⃣ THE FINAL SCORE SCREEN */}
                 {playState === 'done' && (
                   <motion.div key="score" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white/90 backdrop-blur-md rounded-3xl p-8 text-center shadow-lg border border-white/50">
                     <div className="text-6xl mb-4">🏆</div>
@@ -586,7 +664,6 @@ export default function Learn() {
                   </motion.div>
                 )}
 
-                {/* 0️⃣ THE IDLE FLOWCHART */}
                 {playState === 'idle' && (
                   <motion.div key="flowchart" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                     <div className="bg-white/50 rounded-3xl p-5 mb-6 backdrop-blur-sm">
