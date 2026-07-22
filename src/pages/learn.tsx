@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Page } from '@/components/layout/page';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,7 +29,6 @@ function FlowBox({ icon, text, bg, textColor }: { icon: string; text: string; bg
 }
 
 // ─── Article-specific flowcharts ───────────────────────────────────────────
-// (Flowchart components remain unchanged)
 
 function StressHungerFlow() {
   const steps = [
@@ -251,10 +250,11 @@ function StressCycleFlow() {
   );
 }
 
-// ─── Mini-Game Engine ───────────────────────────────────────────────────
+// ─── Mini-Game Engines ───────────────────────────────────────────────────
 
 type Question = { text: string; isFact: boolean; explanation: string; };
 
+// GAME 1: Myth vs Fact Quiz
 function MythVsFactGame({ questions, onComplete }: { questions: Question[], onComplete: (score: number) => void }) {
   const [idx, setIdx] = useState(0);
   const [score, setScore] = useState(0);
@@ -316,12 +316,104 @@ function MythVsFactGame({ questions, onComplete }: { questions: Question[], onCo
   );
 }
 
+// GAME 2: Cortisol Slider (Keep it Chill!)
+function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => void }) {
+  const [level, setLevel] = useState(40);
+  const [timeLeft, setTimeLeft] = useState(10);
+  const [status, setStatus] = useState<'playing' | 'won' | 'lost'>('playing');
+
+  useEffect(() => {
+    if (status !== 'playing') return;
+    const timer = setInterval(() => {
+      setTimeLeft(t => {
+        if (t <= 1) {
+          setStatus('won');
+          return 0;
+        }
+        return t - 1;
+      });
+      setLevel(l => {
+        const newLevel = l + 12; // Cortisol rises fast!
+        if (newLevel >= 100) {
+          setStatus('lost');
+          return 100;
+        }
+        return newLevel;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [status]);
+
+  const chillOut = (amount: number) => {
+    if (status === 'playing') {
+      setLevel(l => Math.max(0, l - amount));
+    }
+  };
+
+  if (status !== 'playing') {
+    return (
+      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white/90 backdrop-blur-md rounded-3xl p-8 text-center shadow-lg border border-white/50">
+        <div className="text-6xl mb-4">{status === 'won' ? '🧘‍♀️' : '🤯'}</div>
+        <h3 className={cn("text-2xl font-extrabold mb-2", status === 'won' ? "text-emerald-600" : "text-rose-600")}>
+          {status === 'won' ? "You kept your cool!" : "Cortisol Overload!"}
+        </h3>
+        <p className="text-sm font-medium text-gray-700 mb-8">
+          {status === 'won' 
+            ? "When you pause to breathe or drink water, you prevent stress hormones from spiking your hunger!" 
+            : "When cortisol runs wild, your brain demands fast energy (sugar). Taking a pause helps!"}
+        </p>
+        <Button onClick={() => onComplete(status === 'won' ? 4 : 0)} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">
+          Continue
+        </Button>
+      </motion.div>
+    );
+  }
+
+  return (
+    <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-lg border border-white/50 text-center relative">
+      <p className="text-xs font-bold text-orange-500 uppercase tracking-wider mb-2">Keep it chill!</p>
+      <p className="text-sm font-medium text-gray-600 mb-6">Don't let cortisol hit 100%. Tap actions to lower it!</p>
+      
+      <div className="flex justify-between font-bold text-gray-700 mb-2">
+        <span>Cortisol Level</span>
+        <span className={level > 75 ? "text-red-500" : ""}>{level}%</span>
+      </div>
+      
+      {/* Cortisol Bar */}
+      <div className="h-6 w-full bg-gray-200 rounded-full overflow-hidden mb-8 shadow-inner border border-gray-100">
+        <motion.div 
+          className="h-full"
+          animate={{ 
+            width: `${level}%`,
+            backgroundColor: level < 50 ? "#22C55E" : level < 80 ? "#F59E0B" : "#EF4444"
+          }}
+          transition={{ duration: 0.3 }}
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 mb-6">
+        <Button onClick={() => chillOut(15)} className="bg-blue-100 hover:bg-blue-200 text-blue-700 font-bold h-14 rounded-2xl">
+          Drink Water 💧
+        </Button>
+        <Button onClick={() => chillOut(20)} className="bg-purple-100 hover:bg-purple-200 text-purple-700 font-bold h-14 rounded-2xl">
+          Deep Breath 🌬️
+        </Button>
+      </div>
+      
+      <div className="text-3xl font-extrabold text-indigo-900 bg-indigo-50 py-3 rounded-xl border-2 border-indigo-100">
+        00:{timeLeft.toString().padStart(2, '0')}
+      </div>
+    </div>
+  );
+}
+
 // ─── Article Data & Unique Question Sets ────────────────────────────────────
 
 const articles = [
   {
     id: 1, emoji: '🧠', title: 'Why stress makes you hungrier', color: 'bg-orange-50 text-orange-900',
     takeaway: "It's not weak willpower — it's cortisol. Knowing this = the power to pause.", Chart: StressHungerFlow,
+    GameComponent: CortisolSliderGame, 
     questions: [
       { text: "Stress directly spikes your blood sugar.", isFact: true, explanation: "Cortisol triggers your liver to release glucose for quick energy!" },
       { text: "Craving a donut when stressed means you have no willpower.", isFact: false, explanation: "It is a biological response. Your brain is demanding fast-acting energy." }
@@ -371,8 +463,11 @@ const articles = [
 
 export default function Learn() {
   const [selected, setSelected] = useState<number | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [gameScore, setGameScore] = useState<number | null>(null);
+  
+  // 🧠 State Machine for our Double-Feature Engine
+  const [playState, setPlayState] = useState<'idle' | 'playing_custom' | 'transition' | 'playing_quiz' | 'done'>('idle');
+  const [sliderScore, setSliderScore] = useState(0);
+  const [quizScore, setQuizScore] = useState(0);
   
   const { addPoints } = useAppContext();
   const active = articles.find(a => a.id === selected);
@@ -380,18 +475,28 @@ export default function Learn() {
 
   const openArticle = (id: number) => {
     setSelected(id);
-    setIsPlaying(false);
-    setGameScore(null);
+    setPlayState('idle');
+    setSliderScore(0);
+    setQuizScore(0);
     if (!awarded.current.has(id)) {
       addPoints(5);
       awarded.current.add(id);
     }
   };
 
-  const handleGameComplete = (score: number) => {
-    setGameScore(score);
-    setIsPlaying(false); 
-    if (score > 0) addPoints(score * 5); 
+  // Triggers the first game (Custom if exists, otherwise straight to Quiz)
+  const startGame = () => {
+    if (active?.GameComponent) {
+      setPlayState('playing_custom');
+    } else {
+      setPlayState('playing_quiz');
+    }
+  };
+
+  // Skips the bonus round and collects points
+  const skipBonusRound = () => {
+    setPlayState('done');
+    if (sliderScore > 0) addPoints(sliderScore * 5); 
   };
 
   return (
@@ -429,19 +534,60 @@ export default function Learn() {
               <h1 className="text-2xl font-extrabold mb-8 leading-tight">{active.title}</h1>
 
               <AnimatePresence mode="wait">
-                {isPlaying ? (
-                  <motion.div key="game" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-                    {/* Now passing the UNIQUE questions into the engine! */}
-                    <MythVsFactGame questions={active.questions} onComplete={handleGameComplete} />
+                
+                {/* 1️⃣ THE CUSTOM GAME (e.g. Cortisol Slider) */}
+                {playState === 'playing_custom' && active.GameComponent && (
+                  <motion.div key="custom_game" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                    <active.GameComponent onComplete={(score) => {
+                      setSliderScore(score);
+                      setPlayState('transition');
+                    }} />
                   </motion.div>
-                ) : gameScore !== null ? (
-                  <motion.div key="score" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white/90 backdrop-blur-md rounded-3xl p-8 text-center shadow-lg">
+                )}
+
+                {/* 2️⃣ THE BRIDGE / TRANSITION SCREEN */}
+                {playState === 'transition' && (
+                  <motion.div key="transition" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white/90 backdrop-blur-md rounded-3xl p-8 text-center shadow-lg border border-white/50">
+                    <div className="text-6xl mb-4">🎁</div>
+                    <h2 className="text-2xl font-extrabold text-gray-800 mb-2">Bonus Round Unlocked!</h2>
+                    <p className="text-gray-600 font-medium mb-6">You secured <span className="font-bold text-amber-500">{sliderScore * 5} VP</span>! Answer two quick questions to earn even more.</p>
+                    <div className="space-y-3">
+                      <Button onClick={() => setPlayState('playing_quiz')} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-12 rounded-xl">
+                        Start Bonus Quiz 🧠
+                      </Button>
+                      <Button onClick={skipBonusRound} variant="ghost" className="w-full text-gray-500 hover:text-gray-700">
+                        No thanks, collect my VP
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* 3️⃣ THE KNOWLEDGE QUIZ */}
+                {playState === 'playing_quiz' && (
+                  <motion.div key="quiz" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                    <MythVsFactGame questions={active.questions || []} onComplete={(score) => {
+                      setQuizScore(score);
+                      const totalVP = (sliderScore * 5) + (score * 5);
+                      if (totalVP > 0) addPoints(totalVP);
+                      setPlayState('done');
+                    }} />
+                  </motion.div>
+                )}
+
+                {/* 4️⃣ THE FINAL SCORE SCREEN */}
+                {playState === 'done' && (
+                  <motion.div key="score" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white/90 backdrop-blur-md rounded-3xl p-8 text-center shadow-lg border border-white/50">
                     <div className="text-6xl mb-4">🏆</div>
-                    <h2 className="text-2xl font-extrabold text-gray-800 mb-2">You scored {gameScore}/{active.questions.length}!</h2>
-                    <p className="text-gray-600 font-medium mb-4">You earned <span className="font-bold text-amber-500">+{gameScore * 5} VP</span> for playing.</p>
+                    <h2 className="text-2xl font-extrabold text-gray-800 mb-2">Knowledge Checked!</h2>
+                    <p className="text-gray-600 font-medium mb-4">
+                      You earned a total of <span className="font-bold text-amber-500">{(sliderScore * 5) + (quizScore * 5)} VP</span>!
+                    </p>
                     <Button onClick={() => setSelected(null)} className="w-full bg-gray-900 text-white rounded-xl">Back to Menu</Button>
                   </motion.div>
-                ) : (
+                )}
+
+                {/* 0️⃣ THE IDLE FLOWCHART */}
+                {playState === 'idle' && (
                   <motion.div key="flowchart" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                     <div className="bg-white/50 rounded-3xl p-5 mb-6 backdrop-blur-sm">
                       <active.Chart />
@@ -456,8 +602,10 @@ export default function Learn() {
                       <div className="absolute -left-6 -bottom-6 text-6xl opacity-20 transform -rotate-12 pointer-events-none">✨</div>
                       <div className="relative z-10">
                         <h3 className="font-extrabold text-xl mb-1">Ready to play?</h3>
-                        <p className="text-indigo-100 text-sm font-medium mb-5">Test your knowledge on this topic and earn up to 10 VP!</p>
-                        <Button onClick={() => setIsPlaying(true)} className="w-full bg-white text-indigo-600 hover:bg-gray-50 rounded-xl font-bold h-12 shadow-sm">
+                        <p className="text-indigo-100 text-sm font-medium mb-5">
+                          {active.GameComponent ? "Play a quick game and unlock a bonus round for up to 30 VP!" : "Test your knowledge on this topic and earn up to 10 VP!"}
+                        </p>
+                        <Button onClick={startGame} className="w-full bg-white text-indigo-600 hover:bg-gray-50 rounded-xl font-bold h-12 shadow-sm">
                           Start Mini-Game 🚀
                         </Button>
                       </div>
