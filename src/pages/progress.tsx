@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { Page } from '@/components/layout/page';
 import { Card } from '@/components/ui/card';
 import { motion } from 'framer-motion';
@@ -91,6 +91,31 @@ export default function Progress() {
   const { user } = useAppContext();
   const current = getLevelForPoints(user.vitalityPoints);
 
+  // 🖱️ DRAG TO SCROLL LOGIC FOR LAPTOPS
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    if (scrollRef.current) {
+      setStartX(e.pageX - scrollRef.current.offsetLeft);
+      setScrollLeft(scrollRef.current.scrollLeft);
+    }
+  };
+
+  const handleMouseLeave = () => setIsDragging(false);
+  const handleMouseUp = () => setIsDragging(false);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !scrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX) * 1.5;
+    scrollRef.current.scrollLeft = scrollLeft - walk;
+  };
+
   return (
     <Page className="p-6 pt-12 bg-gray-50">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
@@ -122,7 +147,6 @@ export default function Progress() {
                 )}
                 style={isCurrent ? { borderColor: lv.color } : {}}
               >
-                {/* Level icon */}
                 <div
                   className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0"
                   style={{ backgroundColor: isUnlocked ? lv.color + '30' : '#F3F4F6' }}
@@ -186,14 +210,24 @@ export default function Progress() {
         ))}
       </Card>
 
-      {/* Locked features teaser */}
+      {/* Locked features teaser (Now with Laptop Click-and-Drag Support!) */}
       {current.level < 5 && (
         <div className="mb-8">
           <h2 className="text-lg font-bold text-gray-700 mb-4">Coming Soon for You</h2>
-          <div className="flex gap-3 overflow-x-auto hide-scrollbar -mx-6 px-6 pb-2">
+          <div 
+            ref={scrollRef}
+            onMouseDown={handleMouseDown}
+            onMouseLeave={handleMouseLeave}
+            onMouseUp={handleMouseUp}
+            onMouseMove={handleMouseMove}
+            className={cn(
+              "flex gap-3 overflow-x-auto hide-scrollbar -mx-6 px-6 pb-2 snap-x",
+              isDragging ? "cursor-grabbing snap-none" : "cursor-grab"
+            )}
+          >
             {VITALITY_LEVELS.filter(l => l.level > current.level).flatMap(l =>
               l.unlocks.map((feature, i) => (
-                <Card key={`${l.level}-${i}`} className="border-none shadow-sm min-w-[140px] shrink-0 p-4 flex flex-col items-center gap-2 text-center bg-gradient-to-b from-gray-50 to-white">
+                <Card key={`${l.level}-${i}`} className="border-none shadow-sm min-w-[140px] shrink-0 p-4 flex flex-col items-center gap-2 text-center bg-gradient-to-b from-gray-50 to-white snap-center pointer-events-none select-none">
                   <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
                     <Lock size={16} className="text-gray-300" />
                   </div>
