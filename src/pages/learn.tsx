@@ -252,9 +252,8 @@ function StressCycleFlow() {
 
 // ─── Mini-Game Engines ───────────────────────────────────────────────────
 
-type Question = { text: string; isFact: boolean; explanation: string; };
-
 // GAME 1: Myth vs Fact Quiz
+type Question = { text: string; isFact: boolean; explanation: string; };
 function MythVsFactGame({ questions, onComplete }: { questions: Question[], onComplete: (score: number) => void }) {
   const [idx, setIdx] = useState(0);
   const [score, setScore] = useState(0);
@@ -316,7 +315,7 @@ function MythVsFactGame({ questions, onComplete }: { questions: Question[], onCo
   );
 }
 
-// GAME 2: Cortisol Slider (Keep it Chill!)
+// GAME 2: Cortisol Slider
 function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => void }) {
   const [level, setLevel] = useState(40);
   const [timeLeft, setTimeLeft] = useState(10);
@@ -380,23 +379,12 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
       </div>
       
       <div className="h-6 w-full bg-gray-200 rounded-full overflow-hidden mb-8 shadow-inner border border-gray-100">
-        <motion.div 
-          className="h-full"
-          animate={{ 
-            width: `${level}%`,
-            backgroundColor: level < 50 ? "#22C55E" : level < 80 ? "#F59E0B" : "#EF4444"
-          }}
-          transition={{ duration: 0.3 }}
-        />
+        <motion.div className="h-full" animate={{ width: `${level}%`, backgroundColor: level < 50 ? "#22C55E" : level < 80 ? "#F59E0B" : "#EF4444" }} transition={{ duration: 0.3 }} />
       </div>
 
       <div className="grid grid-cols-2 gap-3 mb-6">
-        <Button onClick={() => chillOut(15)} className="bg-blue-100 hover:bg-blue-200 text-blue-700 font-bold h-14 rounded-2xl">
-          Drink Water 💧
-        </Button>
-        <Button onClick={() => chillOut(20)} className="bg-purple-100 hover:bg-purple-200 text-purple-700 font-bold h-14 rounded-2xl">
-          Deep Breath 🌬️
-        </Button>
+        <Button onClick={() => chillOut(15)} className="bg-blue-100 hover:bg-blue-200 text-blue-700 font-bold h-14 rounded-2xl">Drink Water 💧</Button>
+        <Button onClick={() => chillOut(20)} className="bg-purple-100 hover:bg-purple-200 text-purple-700 font-bold h-14 rounded-2xl">Deep Breath 🌬️</Button>
       </div>
       
       <div className="text-3xl font-extrabold text-indigo-900 bg-indigo-50 py-3 rounded-xl border-2 border-indigo-100">
@@ -406,9 +394,8 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
   );
 }
 
-// GAME 3: Build-a-Plate (Gut Health Edition)
+// GAME 3: Build-a-Plate
 type FoodItem = { id: number; name: string; emoji: string; isGood: boolean; explanation: string; };
-
 const GUT_FOODS: FoodItem[] = [
   { id: 1, name: 'Oats', emoji: '🥣', isGood: true, explanation: 'Rich in beta-glucan fiber, feeding good bacteria.' },
   { id: 2, name: 'Curd', emoji: '🥄', isGood: true, explanation: 'Packed with live probiotics that balance your gut flora.' },
@@ -446,8 +433,6 @@ function GutHealthPlateGame({ onComplete }: { onComplete: (score: number) => voi
         <h3 className={cn("text-2xl font-extrabold mb-4", isWon ? "text-emerald-600" : "text-rose-600")}>
           {isWon ? "Happy Microbiome! ✨" : "Gut Bugs are Starving! 📉"}
         </h3>
-        
-        {/* EDUCATIONAL BREAKDOWN OF SELECTED FOODS */}
         <div className="space-y-2 mb-6 text-left h-56 overflow-y-auto pr-2 custom-scrollbar">
           {plate.map((food, i) => (
             <div key={i} className="flex gap-3 items-start bg-white p-3 rounded-xl shadow-sm border border-gray-100">
@@ -461,10 +446,7 @@ function GutHealthPlateGame({ onComplete }: { onComplete: (score: number) => voi
             </div>
           ))}
         </div>
-
-        <Button onClick={() => onComplete(isWon ? 4 : 0)} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">
-          Continue
-        </Button>
+        <Button onClick={() => onComplete(isWon ? 4 : 0)} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">Continue</Button>
       </motion.div>
     );
   }
@@ -474,7 +456,6 @@ function GutHealthPlateGame({ onComplete }: { onComplete: (score: number) => voi
       <p className="text-xs font-bold text-green-600 uppercase tracking-wider mb-2">Build a Gut-Happy Plate</p>
       <p className="text-sm font-medium text-gray-600 mb-6">Tap 5 foods to feed your microbiome!</p>
       
-      {/* The Plate visual */}
       <div className="flex justify-center gap-2 mb-6 h-14">
         {[0, 1, 2, 3, 4].map(i => (
           <div key={i} className="w-12 h-12 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center text-2xl shadow-inner">
@@ -483,18 +464,111 @@ function GutHealthPlateGame({ onComplete }: { onComplete: (score: number) => voi
         ))}
       </div>
       
-      {/* Food Grid */}
       <div className="grid grid-cols-4 gap-2 mb-2">
         {GUT_FOODS.map(food => (
-          <motion.button 
-            key={food.id}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => handleTap(food)}
-            className="flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 p-2 rounded-xl border border-gray-100 shadow-sm"
-          >
+          <motion.button key={food.id} whileTap={{ scale: 0.9 }} onClick={() => handleTap(food)} className="flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 p-2 rounded-xl border border-gray-100 shadow-sm">
             <span className="text-3xl mb-1">{food.emoji}</span>
             <span className="text-[10px] font-bold text-gray-500 uppercase">{food.name}</span>
           </motion.button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// GAME 4: The Swap It Challenge (Macronutrients)
+type SwapRound = { craving: string; cravingEmoji: string; correct: string; correctEmoji: string; wrong: string; wrongEmoji: string; explanation: string };
+const SWAP_ROUNDS: SwapRound[] = [
+  { craving: "Sugary Donut", cravingEmoji: "🍩", correct: "Apple & Almonds", correctEmoji: "🍎🥜", wrong: "Energy Drink", wrongEmoji: "🥤", explanation: "Apples and almonds provide fiber and healthy fats, giving you steady energy instead of a rapid sugar crash!" },
+  { craving: "Potato Chips", cravingEmoji: "🍟", correct: "Roasted Chickpeas", correctEmoji: "🥙", wrong: "Pretzels", wrongEmoji: "🥨", explanation: "Chickpeas offer protein and fiber to keep you genuinely full, whereas pretzels are just empty carbs." },
+  { craving: "Ice Cream", cravingEmoji: "🍦", correct: "Greek Yogurt & Fruit", correctEmoji: "🍨", wrong: "Candy Bar", wrongEmoji: "🍫", explanation: "Greek yogurt provides satisfying protein and natural sweetness without the massive cortisol and sugar spike." }
+];
+
+function FoodSwapGame({ onComplete }: { onComplete: (score: number) => void }) {
+  const [round, setRound] = useState(0);
+  const [score, setScore] = useState(0);
+  const [status, setStatus] = useState<'playing' | 'feedback' | 'done'>('playing');
+  const [lastGuess, setLastGuess] = useState<boolean>(false);
+
+  const current = SWAP_ROUNDS[round];
+
+  const handleSwap = (isCorrect: boolean) => {
+    setLastGuess(isCorrect);
+    if (isCorrect) setScore(s => s + 1);
+    setStatus('feedback');
+  };
+
+  const handleNext = () => {
+    if (round < SWAP_ROUNDS.length - 1) {
+      setRound(r => r + 1);
+      setStatus('playing');
+    } else {
+      setStatus('done');
+    }
+  };
+
+  if (status === 'done') {
+    return (
+      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white/90 backdrop-blur-md rounded-3xl p-8 text-center shadow-lg border border-white/50">
+        <div className="text-6xl mb-4">⚖️</div>
+        <h3 className="text-2xl font-extrabold mb-2 text-indigo-700">Macros Balanced!</h3>
+        <p className="text-sm font-medium text-gray-700 mb-8">
+          You made {score}/3 healthy food swaps! By choosing complex carbs, fiber, and protein over simple sugars, you keep your blood sugar steady and avoid energy crashes.
+        </p>
+        <Button onClick={() => onComplete(score > 1 ? 4 : 1)} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">Continue</Button>
+      </motion.div>
+    );
+  }
+
+  return (
+    <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-lg border border-white/50 text-center relative overflow-hidden">
+      <p className="text-xs font-bold text-amber-600 uppercase tracking-wider mb-2">The Swap It Challenge</p>
+      
+      <AnimatePresence mode="wait">
+        {status === 'playing' ? (
+          <motion.div key="playing" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+            <p className="text-sm font-medium text-gray-600 mb-4">Emotional craving detected! Swap it to stabilize your blood sugar:</p>
+            
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6 text-center">
+              <span className="text-4xl block mb-2">{current.cravingEmoji}</span>
+              <p className="font-bold text-amber-900 line-through decoration-amber-400 decoration-2">{current.craving}</p>
+            </div>
+            
+            <div className="flex justify-between font-bold text-gray-700 mb-2">
+              <span className="text-xs">Blood Sugar Spiking! 📈</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+               {/* Fixed layout for simplicity: swapping them around visually could be done with a shuffle, but this works perfectly for the flow */}
+              <Button onClick={() => handleSwap(false)} className="bg-gray-50 hover:bg-gray-100 text-gray-800 font-bold h-24 rounded-2xl border border-gray-200 flex flex-col gap-1 shadow-sm">
+                <span className="text-2xl">{current.wrongEmoji}</span>
+                <span className="text-xs">{current.wrong}</span>
+              </Button>
+              <Button onClick={() => handleSwap(true)} className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold h-24 rounded-2xl border border-emerald-200 flex flex-col gap-1 shadow-sm">
+                <span className="text-2xl">{current.correctEmoji}</span>
+                <span className="text-xs whitespace-normal px-1">{current.correct}</span>
+              </Button>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div key="feedback" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+            <div className="flex justify-center mb-4">
+              {lastGuess ? <CheckCircle2 size={48} className="text-emerald-500" /> : <XCircle size={48} className="text-rose-500" />}
+            </div>
+            <h3 className={cn("text-xl font-extrabold mb-2", lastGuess ? "text-emerald-600" : "text-rose-600")}>
+              {lastGuess ? "Great Swap!" : "Sugar Crash! 📉"}
+            </h3>
+            <p className="text-sm font-medium text-gray-700 mb-8">{current.explanation}</p>
+            <Button onClick={handleNext} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">
+              {round < SWAP_ROUNDS.length - 1 ? 'Next Round' : 'Finish Game'}
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      <div className="mt-6 flex justify-center gap-1">
+        {SWAP_ROUNDS.map((_, i) => (
+          <div key={i} className={cn("h-1.5 rounded-full transition-all", i <= round ? "w-4 bg-amber-500" : "w-1.5 bg-gray-200")} />
         ))}
       </div>
     </div>
@@ -541,6 +615,7 @@ const articles = [
   {
     id: 5, emoji: '🍽', title: 'Emotional vs physical hunger', color: 'bg-peach text-orange-900',
     takeaway: "Both are normal. The skill is noticing which one is talking.", Chart: HungerDecisionTree,
+    GameComponent: FoodSwapGame, // ⚖️ THE NEW SWAP GAME!
     questions: [
       { text: "Physical hunger usually comes on suddenly.", isFact: false, explanation: "Physical hunger builds gradually. Emotional hunger hits you like a lightning bolt." },
       { text: "Emotional hunger rarely feels satisfied when full.", isFact: true, explanation: "Because you aren't feeding the stomach, you are trying to feed a feeling." }
