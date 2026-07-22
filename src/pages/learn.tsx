@@ -331,7 +331,8 @@ export default function Learn() {
   };
 
   return (
-    <Page className="p-6 pt-12 bg-gray-50">
+    // ✨ ADDED pb-24 HERE TO FIX THE FOOTER OVERLAP ✨
+    <Page className="p-6 pt-12 pb-24 bg-gray-50">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="text-3xl font-extrabold text-gray-900 mb-2">Learn 📚</h1>
         <p className="text-gray-500 text-sm font-medium mb-8">Tap any topic to see how it works — visually.</p>
