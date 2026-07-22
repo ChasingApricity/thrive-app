@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { Page } from '@/components/layout/page';
 import { Card } from '@/components/ui/card';
 import { motion } from 'framer-motion';
@@ -88,6 +88,31 @@ export default function Insights() {
   const { user } = useAppContext();
   const radarData = user.assessment ? getRadarData(user.assessment) : null;
 
+  // 🖱️ DRAG TO SCROLL LOGIC FOR LAPTOPS
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    if (scrollRef.current) {
+      setStartX(e.pageX - scrollRef.current.offsetLeft);
+      setScrollLeft(scrollRef.current.scrollLeft);
+    }
+  };
+
+  const handleMouseLeave = () => setIsDragging(false);
+  const handleMouseUp = () => setIsDragging(false);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !scrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX) * 1.5;
+    scrollRef.current.scrollLeft = scrollLeft - walk;
+  };
+
   return (
     <Page className="p-6 pt-12 bg-gray-50">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
@@ -138,11 +163,18 @@ export default function Insights() {
         </Card>
       )}
 
-      {/* ── This Week ── */}
+      {/* ── This Week (Now with Laptop Click-and-Drag Support!) ── */}
       <h2 className="text-lg font-bold mb-4 text-gray-700">This Week</h2>
-      <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-6 -mx-6 px-6 snap-x">
+      <div 
+        ref={scrollRef}
+        onMouseDown={handleMouseDown}
+        onMouseLeave={handleMouseLeave}
+        onMouseUp={handleMouseUp}
+        onMouseMove={handleMouseMove}
+        className={`flex gap-4 overflow-x-auto hide-scrollbar pb-6 -mx-6 px-6 snap-x ${isDragging ? "cursor-grabbing snap-none" : "cursor-grab"}`}
+      >
         {weeklyInsights.map((insight, i) => (
-          <Card key={i} className={`min-w-[160px] snap-center shrink-0 p-5 border-none shadow-sm ${insight.bg} flex flex-col justify-between h-40`}>
+          <Card key={i} className={`min-w-[160px] snap-center shrink-0 p-5 border-none shadow-sm ${insight.bg} flex flex-col justify-between h-40 pointer-events-none select-none`}>
             <div className="text-4xl">{insight.emoji}</div>
             <div>
               <div className={`font-bold text-lg leading-tight ${insight.color}`}>{insight.title}</div>
