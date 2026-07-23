@@ -777,10 +777,10 @@ const CIRCADIAN_HABITS: CircadianHabit[] = [
     id: 'sun', 
     name: 'Morning Sunlight', 
     emoji: '☀️', 
-    minTime: 6.5, maxTime: 9.5, 
-    idealDisplay: "6:30 AM - 9:30 AM", 
+    minTime: 6.0, maxTime: 9.5, 
+    idealDisplay: "6:00 AM - 9:30 AM", 
     success: "Perfect! Morning light triggers cortisol, waking up your teen brain and starting the countdown for evening melatonin.", 
-    failEarly: "Before dawn! Getting up before the sun means you miss the strong light trigger that officially starts your daily biological clock.",
+    failEarly: "Wow, early bird! If you wake up before the sun, turn on bright indoor lights immediately so your brain knows it's daytime.",
     failLate: "Too late! Missing morning light makes it much harder to wake up for school and shifts your body clock even later." 
   },
   { 
