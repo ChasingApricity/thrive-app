@@ -316,10 +316,10 @@ function MythVsFactGame({ questions, onComplete }: { questions: Question[], onCo
   );
 }
 
-// GAME 2: Cortisol Slider (UPDATED: 30-SECOND TIMER)
+// GAME 2: Cortisol Slider (FIXED: PROPERLY FREEZES PROGRESS BAR WHEN SHIELD ACTIVE)
 function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => void }) {
   const [level, setLevel] = useState(40);
-  const [timeLeft, setTimeLeft] = useState(30); // Extended to 30 seconds!
+  const [timeLeft, setTimeLeft] = useState(30);
   const [status, setStatus] = useState<'playing' | 'won' | 'lost'>('playing');
   
   const [shieldActive, setShieldActive] = useState(false);
@@ -355,13 +355,18 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
       });
 
       setLevel(l => {
-        let newLevel = l;
-        if (!shieldRef.current) {
-          newLevel += 10; 
+        // If shield is active, absolutely freeze the level from rising or falling
+        if (shieldRef.current) {
+          return l;
         }
+
+        let newLevel = l;
+        newLevel += 10; 
+
         if (isHoldingRef.current) {
           newLevel -= 20; 
         }
+
         if (newLevel >= 100) {
           setStatus('lost');
           return 100;
@@ -377,7 +382,7 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
       setWaterCharges(0);
       setShieldActive(true);
       setLevel(l => Math.max(0, l - 25));
-      setTimeout(() => setShieldActive(false), 4000);
+      setTimeout(() => setShieldActive(false), 5000); // 5-second complete freeze
     }
   };
 
@@ -391,7 +396,7 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
         <p className="text-sm font-medium text-gray-700 mb-8">
           {status === 'won' 
             ? "By surviving the full 30-second breathing session, you successfully mastered your stress response!" 
-            : "When cortisol runs wild, your brain demands fast energy (sugar). Remember to pace your breathing!"}
+            : "When cortisol runs wild, your brain demands fast energy (sugar). Remember to use your Hydration Shield!"}
         </p>
         <Button onClick={() => onComplete(status === 'won' ? 4 : 0)} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">Continue</Button>
       </motion.div>
