@@ -1121,6 +1121,183 @@ function FoodSwapGame({ onComplete }: { onComplete: (score: number) => void }) {
   );
 }
 
+// GAME 7: THE LOOP BREAKER (NEW TEEN-FOCUSED HABITS)
+type LoopHabit = {
+  id: string;
+  name: string;
+  emoji: string;
+  science: string;
+};
+
+const LOOP_HABITS: LoopHabit[] = [
+  { id: 'music', name: 'Slow Music', emoji: '🎧', science: 'Rhythmic entrainment! Listening to 60 BPM music synchronizes your heartbeat and shifts brainwaves to a relaxed state.' },
+  { id: 'breathe', name: '4-7-8 Breath', emoji: '🫁', science: 'Parasympathetic reset! Deep exhales signal safety to the brain, halting cortisol production.' },
+  { id: 'move', name: '5-Min Walk', emoji: '👟', science: 'Glucose clearing! Light movement burns off stress adrenaline and stabilizes blood sugar spikes.' },
+  { id: 'hydrate', name: 'Water First', emoji: '💧', science: 'Hydration shield! Hydrating prevents the brain from sending false starvation and craving signals.' },
+  { id: 'ground', name: '5-4-3-2-1 Rule', emoji: '👁️', science: 'Sensory grounding! Focusing on your senses pulls blood flow out of the panicked amygdala back to the logical prefrontal cortex.' },
+];
+
+function LoopBreakerGame({ onComplete }: { onComplete: (score: number) => void }) {
+  const [status, setStatus] = useState<'spinning' | 'broken'>('spinning');
+  const [chosenHabit, setChosenHabit] = useState<LoopHabit | null>(null);
+  const targetRef = useRef<HTMLDivElement>(null);
+
+  const handleDragEnd = (e: any, info: any, habit: LoopHabit) => {
+    if (!targetRef.current || status === 'broken') return;
+    const rect = targetRef.current.getBoundingClientRect();
+
+    let clientX = info.point.x;
+    let clientY = info.point.y;
+
+    if (e.changedTouches && e.changedTouches.length > 0) {
+      clientX = e.changedTouches[0].clientX;
+      clientY = e.changedTouches[0].clientY;
+    } else if (e.clientX !== undefined && e.clientY !== undefined) {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+
+    const buffer = 60;
+
+    if (
+      clientX >= (rect.left - buffer) &&
+      clientX <= (rect.right + buffer) &&
+      clientY >= (rect.top - buffer) &&
+      clientY <= (rect.bottom + buffer)
+    ) {
+      setChosenHabit(habit);
+      setStatus('broken');
+    }
+  };
+
+  const badNodes = [
+    { icon: '😰', label: 'Stress' },
+    { icon: '😴', label: 'Poor Sleep' },
+    { icon: '🦠', label: 'Gut Issues' },
+    { icon: '🍭', label: 'Cravings' },
+    { icon: '😔', label: 'Low Mood' },
+  ];
+
+  const goodNodes = [
+    { icon: '😌', label: 'Calm' },
+    { icon: '🌙', label: 'Rest' },
+    { icon: '✨', label: 'Healthy Gut' },
+    { icon: '⚖️', label: 'Balanced' },
+    { icon: '⚡', label: 'Energized' },
+  ];
+
+  const currentNodes = status === 'broken' ? goodNodes : badNodes;
+
+  return (
+    <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-lg border border-white/50 text-center relative overflow-hidden select-none">
+      <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-2">Loop Breaker</p>
+
+      {status === 'spinning' ? (
+        <>
+          <p className="text-sm font-medium text-gray-600 mb-4">Drag ANY biological habit into the Doom Loop to break the cycle!</p>
+
+          {/* SPINNING DOOM LOOP TARGET */}
+          <div ref={targetRef} className="relative h-64 w-full flex items-center justify-center mb-6">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
+              className="w-52 h-52 rounded-full border-2 border-dashed border-rose-300 flex items-center justify-center relative shadow-inner bg-rose-50/40"
+            >
+              {badNodes.map((node, i) => {
+                const angle = (i * 2 * Math.PI) / 5 - Math.PI / 2;
+                const r = 85;
+                const x = r * Math.cos(angle);
+                const y = r * Math.sin(angle);
+                return (
+                  <div
+                    key={i}
+                    className="absolute w-12 h-12 rounded-full bg-white border border-rose-200 shadow-sm flex flex-col items-center justify-center"
+                    style={{ left: `calc(50% + ${x}px - 24px)`, top: `calc(50% + ${y}px - 24px)` }}
+                  >
+                    <span className="text-lg">{node.icon}</span>
+                  </div>
+                );
+              })}
+            </motion.div>
+
+            {/* Target Ring Overlay */}
+            <div className="absolute w-24 h-24 rounded-full border-2 border-rose-400 border-dashed animate-pulse bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center pointer-events-none shadow-md">
+              <span className="text-2xl mb-0.5">💥</span>
+              <span className="text-[9px] font-extrabold text-rose-700 uppercase tracking-tight">Drop Here</span>
+            </div>
+          </div>
+
+          {/* HABIT ARSENAL */}
+          <div className="space-y-2">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Your Habit Arsenal ⬇️</p>
+            <div className="grid grid-cols-5 gap-1.5 relative z-20">
+              {LOOP_HABITS.map((habit) => (
+                <motion.div
+                  key={habit.id}
+                  drag
+                  dragSnapToOrigin={true}
+                  dragElastic={0.2}
+                  whileDrag={{ scale: 1.15, zIndex: 50, cursor: 'grabbing' }}
+                  onDragEnd={(e, info) => handleDragEnd(e, info, habit)}
+                  className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl p-2 flex flex-col items-center justify-center gap-0.5 shadow-sm cursor-grab touch-none text-emerald-900"
+                >
+                  <span className="text-xl">{habit.emoji}</span>
+                  <span className="text-[9px] font-extrabold leading-tight text-center">{habit.name}</span>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </>
+      ) : (
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="space-y-6">
+          <div className="text-6xl my-2">💥✨</div>
+          <h3 className="text-2xl font-extrabold text-emerald-600">Loop Collapsed!</h3>
+
+          {/* RESTORED VIBRANT RING */}
+          <div className="relative h-48 w-full flex items-center justify-center">
+            <div className="w-48 h-48 rounded-full border-2 border-emerald-300 bg-emerald-50/50 flex items-center justify-center relative shadow-sm">
+              {currentNodes.map((node, i) => {
+                const angle = (i * 2 * Math.PI) / 5 - Math.PI / 2;
+                const r = 75;
+                const x = r * Math.cos(angle);
+                const y = r * Math.sin(angle);
+                return (
+                  <motion.div
+                    key={i}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: i * 0.1 }}
+                    className="absolute w-12 h-12 rounded-full bg-white border border-emerald-200 shadow-sm flex flex-col items-center justify-center"
+                    style={{ left: `calc(50% + ${x}px - 24px)`, top: `calc(50% + ${y}px - 24px)` }}
+                  >
+                    <span className="text-lg">{node.icon}</span>
+                  </motion.div>
+                );
+              })}
+              <div className="w-16 h-16 rounded-full bg-emerald-500 text-white flex flex-col items-center justify-center shadow-md">
+                <span className="text-2xl">{chosenHabit?.emoji}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-left shadow-sm">
+            <p className="font-extrabold text-xs text-emerald-900 uppercase tracking-wider mb-1">
+              How {chosenHabit?.name} Broke The Cycle:
+            </p>
+            <p className="text-xs font-medium text-emerald-800 leading-relaxed">
+              {chosenHabit?.science}
+            </p>
+          </div>
+
+          <Button onClick={() => onComplete(4)} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">
+            Collect VP & Complete
+          </Button>
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
 // ─── Article Data & Unique Question Sets ────────────────────────────────────
 
 const articles = [
@@ -1172,6 +1349,7 @@ const articles = [
   {
     id: 6, emoji: '🌱', title: 'The stress-sleep-hunger cycle', color: 'bg-mint text-green-900',
     takeaway: "Everything connects. Every small good habit ripples through the whole loop.", Chart: StressCycleFlow,
+    GameComponent: LoopBreakerGame,
     questions: [
       { text: "You have to fix your sleep, stress, and diet all at the exact same time.", isFact: false, explanation: "Fixing just ONE thing (like drinking more water) positively ripples through the entire cycle." },
       { text: "High stress can directly slow down your digestion.", isFact: true, explanation: "When stressed, your body diverts blood away from your gut, slowing digestion down." }
