@@ -316,7 +316,7 @@ function MythVsFactGame({ questions, onComplete }: { questions: Question[], onCo
   );
 }
 
-// GAME 2: Cortisol Slider (THE ZEN EDITION)
+// GAME 2: Cortisol Slider
 function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => void }) {
   const [level, setLevel] = useState(40);
   const [timeLeft, setTimeLeft] = useState(50); 
@@ -759,14 +759,70 @@ function HydrationGame({ onComplete }: { onComplete: (score: number) => void }) 
   );
 }
 
-// GAME 5: CIRCADIAN CLOCK BUILDER (TEEN EDITION!)
-type CircadianHabit = { id: string; name: string; emoji: string; minTime: number; maxTime: number; idealDisplay: string; success: string; fail: string; };
+// GAME 5: CIRCADIAN CLOCK BUILDER
+type CircadianHabit = { 
+  id: string; 
+  name: string; 
+  emoji: string; 
+  minTime: number; 
+  maxTime: number; 
+  idealDisplay: string; 
+  success: string; 
+  failEarly: string; 
+  failLate: string; 
+};
+
 const CIRCADIAN_HABITS: CircadianHabit[] = [
-  { id: 'sun', name: 'Morning Sunlight', emoji: '☀️', minTime: 6.5, maxTime: 9.5, idealDisplay: "6:30 AM - 9:30 AM", success: "Perfect! Morning light triggers cortisol, waking up your teen brain and starting the countdown for evening melatonin.", fail: "Too late! Missing morning light makes it much harder to wake up for school and shifts your body clock even later." },
-  { id: 'coffee', name: 'Last Caffeine/Energy Drink', emoji: '🥤', minTime: 12, maxTime: 15, idealDisplay: "Before 3:00 PM", success: "Great! This gives your body enough time to clear out the caffeine before you try to sleep.", fail: "Too late! Energy drinks and iced coffees have a 6-8 hour half-life. Drinking them late destroys your deep sleep." },
-  { id: 'meal', name: 'Last Heavy Meal', emoji: '🍔', minTime: 18, maxTime: 20.5, idealDisplay: "6:00 PM - 8:30 PM", success: "Nice! Giving your stomach 2-3 hours to digest means your core temperature can drop, which is required for sleep.", fail: "Eating a heavy meal right before bed forces your gut to work overtime, raising your heart rate and ruining your sleep quality!" },
-  { id: 'screens', name: 'Screens Dimmed/Off', emoji: '📱', minTime: 21, maxTime: 22.5, idealDisplay: "9:00 PM - 10:30 PM", success: "Excellent. Giving your eyes a break from TikTok/Instagram blue light allows your brain to finally release melatonin.", fail: "Blue light at this hour tricks your brain into thinking the sun is still up, completely blocking your sleep hormones!" },
-  { id: 'sleep', name: 'Consistent Bedtime', emoji: '😴', minTime: 21.5, maxTime: 23.5, idealDisplay: "9:30 PM - 11:30 PM", success: "Ideal! Going to bed at the same time anchors your internal clock. Consistency makes waking up way less painful.", fail: "A bit off-schedule! Teen body clocks naturally want to stay up late, but consistency is the only way to not feel exhausted." }
+  { 
+    id: 'sun', 
+    name: 'Morning Sunlight', 
+    emoji: '☀️', 
+    minTime: 6.5, maxTime: 9.5, 
+    idealDisplay: "6:30 AM - 9:30 AM", 
+    success: "Perfect! Morning light triggers cortisol, waking up your teen brain and starting the countdown for evening melatonin.", 
+    failEarly: "Before dawn! Getting up before the sun means you miss the strong light trigger that officially starts your daily biological clock.",
+    failLate: "Too late! Missing morning light makes it much harder to wake up for school and shifts your body clock even later." 
+  },
+  { 
+    id: 'coffee', 
+    name: 'Last Caffeine/Energy Drink', 
+    emoji: '🥤', 
+    minTime: 12, maxTime: 15, 
+    idealDisplay: "Before 3:00 PM", 
+    success: "Great! This gives your body enough time to clear out the caffeine before you try to sleep.", 
+    failEarly: "Skipping the afternoon slump? Cutting off caffeine this early is totally fine, but if you need a boost, try splashing cold water on your face instead!",
+    failLate: "Too late! Energy drinks and iced coffees have a 6-8 hour half-life. Drinking them late destroys your deep sleep." 
+  },
+  { 
+    id: 'meal', 
+    name: 'Last Heavy Meal', 
+    emoji: '🍔', 
+    minTime: 18, maxTime: 20.5, 
+    idealDisplay: "6:00 PM - 8:30 PM", 
+    success: "Nice! Giving your stomach 2-3 hours to digest means your core temperature can drop, which is required for sleep.", 
+    failEarly: "A bit too early! If you eat dinner at 4 PM, you'll likely experience a blood sugar drop and wake up hungry in the middle of the night.",
+    failLate: "Eating a heavy meal right before bed forces your gut to work overtime, raising your heart rate and ruining your sleep quality!" 
+  },
+  { 
+    id: 'screens', 
+    name: 'Screens Dimmed/Off', 
+    emoji: '📱', 
+    minTime: 21, maxTime: 22.5, 
+    idealDisplay: "9:00 PM - 10:30 PM", 
+    success: "Excellent. Giving your eyes a break from TikTok/Instagram blue light allows your brain to finally release melatonin.", 
+    failEarly: "Super disciplined! Turning screens off this early is great for your brain, just make sure you switch to a relaxing low-light activity like reading.",
+    failLate: "Blue light at this hour tricks your brain into thinking the sun is still up, completely blocking your sleep hormones!" 
+  },
+  { 
+    id: 'sleep', 
+    name: 'Consistent Bedtime', 
+    emoji: '😴', 
+    minTime: 21.5, maxTime: 23.5, 
+    idealDisplay: "9:30 PM - 11:30 PM", 
+    success: "Ideal! Going to bed at the same time anchors your internal clock. Consistency makes waking up way less painful.", 
+    failEarly: "Too early! Trying to force sleep before your body's 'sleep gate' opens just leads to tossing, turning, and sleep anxiety.",
+    failLate: "A bit off-schedule! Teen body clocks naturally want to stay up late, but consistency is the only way to not feel exhausted." 
+  }
 ];
 
 function CircadianClockGame({ onComplete }: { onComplete: (score: number) => void }) {
@@ -774,7 +830,7 @@ function CircadianClockGame({ onComplete }: { onComplete: (score: number) => voi
   const [time, setTime] = useState(12); 
   const [score, setScore] = useState(0);
   const [status, setStatus] = useState<'playing' | 'feedback' | 'done'>('playing');
-  const [lastCorrect, setLastCorrect] = useState(false);
+  const [feedbackType, setFeedbackType] = useState<'success' | 'early' | 'late'>('success');
 
   const current = CIRCADIAN_HABITS[round];
 
@@ -806,9 +862,16 @@ function CircadianClockGame({ onComplete }: { onComplete: (score: number) => voi
   };
 
   const handleLockTime = () => {
-    const isCorrect = time >= current.minTime && time <= current.maxTime;
-    setLastCorrect(isCorrect);
-    if (isCorrect) setScore(s => s + 1);
+    let type: 'success' | 'early' | 'late' = 'success';
+    
+    if (time < current.minTime) {
+      type = 'early';
+    } else if (time > current.maxTime) {
+      type = 'late';
+    }
+
+    setFeedbackType(type);
+    if (type === 'success') setScore(s => s + 1);
     setStatus('feedback');
   };
 
@@ -836,6 +899,8 @@ function CircadianClockGame({ onComplete }: { onComplete: (score: number) => voi
   }
 
   const skyVisuals = getSunMoonProps(time);
+  const isSuccess = feedbackType === 'success';
+  const feedbackExplanation = isSuccess ? current.success : (feedbackType === 'early' ? current.failEarly : current.failLate);
 
   return (
     <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-lg border border-white/50 text-center relative overflow-hidden">
@@ -880,13 +945,13 @@ function CircadianClockGame({ onComplete }: { onComplete: (score: number) => voi
         ) : (
           <motion.div key="feedback" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
             <div className="flex justify-center mb-4">
-              {lastCorrect ? <CheckCircle2 size={48} className="text-emerald-500" /> : <XCircle size={48} className="text-rose-500" />}
+              {isSuccess ? <CheckCircle2 size={48} className="text-emerald-500" /> : <XCircle size={48} className="text-rose-500" />}
             </div>
-            <h3 className={cn("text-xl font-extrabold mb-2", lastCorrect ? "text-emerald-600" : "text-rose-600")}>
-              {lastCorrect ? "Perfect Timing!" : "Out of Sync!"}
+            <h3 className={cn("text-xl font-extrabold mb-2", isSuccess ? "text-emerald-600" : "text-rose-600")}>
+              {isSuccess ? "Perfect Timing!" : (feedbackType === 'early' ? "Too Early!" : "Too Late!")}
             </h3>
             <p className="text-sm font-bold text-gray-800 mb-2">Ideal Window: {current.idealDisplay}</p>
-            <p className="text-sm font-medium text-gray-700 mb-8">{lastCorrect ? current.success : current.fail}</p>
+            <p className="text-sm font-medium text-gray-700 mb-8">{feedbackExplanation}</p>
             <Button onClick={handleNext} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">
               {round < CIRCADIAN_HABITS.length - 1 ? 'Next Habit' : 'Finish Clock'}
             </Button>
