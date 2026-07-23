@@ -29,12 +29,13 @@ export const VITALITY_LEVELS: VitalityLevel[] = [
   { level: 5, name: 'Radiant',  emoji: '✨', minPoints: 1000, color: '#A78BFA', unlocks: ['Full History', 'Streak Rewards', 'Exclusive Themes'] },
 ];
 
-export const POINT_ACTIONS: { action: string; points: number; emoji: string }[] = [
+export const POINT_ACTIONS: { action: string; points: number | string; emoji: string }[] = [
   { action: 'Complete your assessment',  points: 50, emoji: '📋' },
   { action: 'Morning check-in',          points: 15, emoji: '☀️' },
   { action: 'Night reflection',          points: 15, emoji: '🌙' },
   { action: 'Log a meal',                points: 10, emoji: '🍽' },
   { action: 'Read a learn article',      points: 5,  emoji: '📚' },
+  { action: 'Beat a mini-game',          points: '10-30', emoji: '🎮' },
   { action: 'Daily streak bonus',        points: 5,  emoji: '🔥' },
 ];
 
