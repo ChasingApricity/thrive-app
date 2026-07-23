@@ -316,11 +316,22 @@ function MythVsFactGame({ questions, onComplete }: { questions: Question[], onCo
   );
 }
 
-// GAME 2: Cortisol Slider
+// GAME 2: Cortisol Slider (NOW WITH BIOFEEDBACK ORB AND HYDRATION SHIELD!)
 function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => void }) {
   const [level, setLevel] = useState(40);
-  const [timeLeft, setTimeLeft] = useState(10);
+  const [timeLeft, setTimeLeft] = useState(15); // Extended time slightly for the mechanic
   const [status, setStatus] = useState<'playing' | 'won' | 'lost'>('playing');
+  
+  // New Mechanics State
+  const [shieldActive, setShieldActive] = useState(false);
+  const [waterCharges, setWaterCharges] = useState(1);
+  const [isHolding, setIsHolding] = useState(false);
+
+  // We use refs inside intervals to avoid dependency loops
+  const isHoldingRef = React.useRef(isHolding);
+  useEffect(() => { isHoldingRef.current = isHolding; }, [isHolding]);
+  const shieldRef = React.useRef(shieldActive);
+  useEffect(() => { shieldRef.current = shieldActive; }, [shieldActive]);
 
   useEffect(() => {
     if (status !== 'playing') return;
@@ -332,21 +343,36 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
         }
         return t - 1;
       });
+
       setLevel(l => {
-        const newLevel = l + 12; 
+        let newLevel = l;
+        
+        // Cortisol naturally spikes unless the shield is active
+        if (!shieldRef.current) {
+          newLevel += 10; 
+        }
+        
+        // Breathing actively lowers it
+        if (isHoldingRef.current) {
+          newLevel -= 18; 
+        }
+
         if (newLevel >= 100) {
           setStatus('lost');
           return 100;
         }
-        return newLevel;
+        return Math.max(0, newLevel);
       });
     }, 1000);
     return () => clearInterval(timer);
   }, [status]);
 
-  const chillOut = (amount: number) => {
-    if (status === 'playing') {
-      setLevel(l => Math.max(0, l - amount));
+  const useWater = () => {
+    if (waterCharges > 0 && status === 'playing') {
+      setWaterCharges(0);
+      setShieldActive(true);
+      // Hydration Shield completely stops cortisol rise for 4 seconds
+      setTimeout(() => setShieldActive(false), 4000);
     }
   };
 
@@ -359,8 +385,8 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
         </h3>
         <p className="text-sm font-medium text-gray-700 mb-8">
           {status === 'won' 
-            ? "When you pause to breathe or drink water, you prevent stress hormones from spiking your hunger!" 
-            : "When cortisol runs wild, your brain demands fast energy (sugar). Taking a pause helps!"}
+            ? "By utilizing focused breathing and strategic hydration, you successfully buffered the physical stress response!" 
+            : "When cortisol runs wild, your brain demands fast energy (sugar). Remember your Hydration Shield next time!"}
         </p>
         <Button onClick={() => onComplete(status === 'won' ? 4 : 0)} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">Continue</Button>
       </motion.div>
@@ -368,22 +394,60 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
   }
 
   return (
-    <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-lg border border-white/50 text-center relative">
+    <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-lg border border-white/50 text-center relative overflow-hidden select-none">
       <p className="text-xs font-bold text-orange-500 uppercase tracking-wider mb-2">Keep it chill!</p>
-      <p className="text-sm font-medium text-gray-600 mb-6">Don't let cortisol hit 100%. Tap actions to lower it!</p>
+      <p className="text-sm font-medium text-gray-600 mb-6">Hold to breathe and use water to shield spikes!</p>
       
       <div className="flex justify-between font-bold text-gray-700 mb-2">
         <span>Cortisol Level</span>
         <span className={level > 75 ? "text-red-500" : ""}>{level}%</span>
       </div>
       
-      <div className="h-6 w-full bg-gray-200 rounded-full overflow-hidden mb-8 shadow-inner border border-gray-100">
-        <motion.div className="h-full" animate={{ width: `${level}%`, backgroundColor: level < 50 ? "#22C55E" : level < 80 ? "#F59E0B" : "#EF4444" }} transition={{ duration: 0.3 }} />
+      {/* Cortisol Bar */}
+      <div className={cn("h-6 w-full bg-gray-200 rounded-full overflow-hidden mb-8 shadow-inner border border-gray-100 transition-all", shieldActive ? "ring-4 ring-cyan-300" : "")}>
+        <motion.div 
+          className="h-full" 
+          animate={{ 
+            width: `${level}%`, 
+            backgroundColor: shieldActive ? "#06B6D4" : (level < 50 ? "#22C55E" : level < 80 ? "#F59E0B" : "#EF4444") 
+          }} 
+          transition={{ duration: 0.3 }} 
+        />
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        <Button onClick={() => chillOut(15)} className="bg-blue-100 hover:bg-blue-200 text-blue-700 font-bold h-14 rounded-2xl">Drink Water 💧</Button>
-        <Button onClick={() => chillOut(20)} className="bg-purple-100 hover:bg-purple-200 text-purple-700 font-bold h-14 rounded-2xl">Deep Breath 🌬️</Button>
+      {/* The Biofeedback Orb */}
+      <div className="flex justify-center mb-8 relative h-32 items-center">
+        <motion.div 
+          animate={{ scale: [1, 1.4, 1] }} 
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          className={cn("absolute w-24 h-24 rounded-full border-4 flex items-center justify-center transition-colors", 
+            isHolding ? "bg-emerald-100 border-emerald-400" : "bg-indigo-50 border-indigo-200")}
+        >
+          <span className="text-3xl opacity-50">{isHolding ? '😌' : '🌬️'}</span>
+        </motion.div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 mb-6 relative z-10">
+        <Button 
+          disabled={waterCharges === 0 || shieldActive}
+          onClick={useWater} 
+          className={cn("font-bold h-14 rounded-2xl shadow-sm transition-all text-sm", 
+            shieldActive ? "bg-cyan-400 text-white" : waterCharges > 0 ? "bg-cyan-100 hover:bg-cyan-200 text-cyan-800" : "bg-gray-100 text-gray-400"
+          )}
+        >
+          {shieldActive ? "Shield Active 🛡️" : waterCharges > 0 ? "Hydration Shield 💧" : "Water Empty"}
+        </Button>
+        <button 
+          onPointerDown={(e) => { e.preventDefault(); setIsHolding(true); }}
+          onPointerUp={(e) => { e.preventDefault(); setIsHolding(false); }}
+          onPointerLeave={(e) => { e.preventDefault(); setIsHolding(false); }}
+          onPointerCancel={(e) => { e.preventDefault(); setIsHolding(false); }}
+          className={cn("font-bold h-14 rounded-2xl shadow-sm transition-all select-none text-sm border-none flex items-center justify-center", 
+            isHolding ? "bg-emerald-500 text-white scale-95" : "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+          )}
+        >
+          {isHolding ? "Holding..." : "Hold to Breathe"}
+        </button>
       </div>
       
       <div className="text-3xl font-extrabold text-indigo-900 bg-indigo-50 py-3 rounded-xl border-2 border-indigo-100">
@@ -393,7 +457,7 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
   );
 }
 
-// GAME 3: Build-a-Plate (Gut Health)
+// GAME 3: Build-a-Plate
 type FoodItem = { id: number; name: string; emoji: string; isGood: boolean; explanation: string; };
 const GUT_FOODS: FoodItem[] = [
   { id: 1, name: 'Oats', emoji: '🥣', isGood: true, explanation: 'Rich in beta-glucan fiber, feeding good bacteria.' },
@@ -475,7 +539,7 @@ function GutHealthPlateGame({ onComplete }: { onComplete: (score: number) => voi
   );
 }
 
-// GAME 4: Hydration Hero (Water vs Fatigue & Anxiety)
+// GAME 4: Hydration Hero 
 type HydrationScenario = { prompt: string; icon: string; goodAction: string; goodExplanation: string; badAction: string; };
 const HYDRATION_ROUNDS: HydrationScenario[] = [
   { prompt: "You feel suddenly anxious and jittery at your desk.", icon: '😰', goodAction: "Drink 2 Glasses of Water 💧", goodExplanation: "Mild cellular dehydration triggers physical stress responses that your brain misinterprets as anxiety.", badAction: "Grab an Espresso ☕" },
@@ -651,7 +715,7 @@ function SleepGame({ onComplete }: { onComplete: (score: number) => void }) {
   );
 }
 
-// GAME 6: The Swap It Challenge (Macronutrients)
+// GAME 6: The Swap It Challenge
 type SwapRound = { craving: string; cravingEmoji: string; correct: string; correctEmoji: string; wrong: string; wrongEmoji: string; explanation: string };
 const SWAP_ROUNDS: SwapRound[] = [
   { craving: "Sugary Donut", cravingEmoji: "🍩", correct: "Apple & Almonds", correctEmoji: "🍎🥜", wrong: "Energy Drink", wrongEmoji: "🥤", explanation: "Apples and almonds provide fiber and healthy fats, giving you steady energy instead of a rapid sugar crash!" },
@@ -773,7 +837,7 @@ const articles = [
   {
     id: 3, emoji: '💧', title: 'How hydration affects your mood', color: 'bg-cyan-50 text-cyan-900',
     takeaway: "Before deciding you need a nap or a snack — drink a glass of water first, always.", Chart: HydrationFlow,
-    GameComponent: HydrationGame, // 🌊 HYDRATION HERO ASSIGNED HERE!
+    GameComponent: HydrationGame, 
     questions: [
       { text: "You should only drink water when you feel thirsty.", isFact: false, explanation: "Thirst is a late sign of dehydration. Keep sipping steadily." },
       { text: "Dehydration can masquerade as anxiety.", isFact: true, explanation: "Even mild dehydration causes physical stress that your brain misinterprets as anxiety." }
@@ -782,7 +846,7 @@ const articles = [
   {
     id: 4, emoji: '😴', title: 'Why sleep is the secret weapon', color: 'bg-indigo-50 text-indigo-900',
     takeaway: "8–9 hours isn't optional. It's when your body fixes everything else.", Chart: SleepFlow,
-    GameComponent: SleepGame, // 😴 SLEEP HYGIENE BUILDER ASSIGNED HERE!
+    GameComponent: SleepGame, 
     questions: [
       { text: "You can 'catch up' on missed sleep during the weekend.", isFact: false, explanation: "Binge-sleeping doesn't undo the metabolic damage of sleep deprivation during the week." },
       { text: "Lack of sleep increases your hunger hormones.", isFact: true, explanation: "Poor sleep spikes ghrelin (hunger) and lowers leptin (fullness)." }
