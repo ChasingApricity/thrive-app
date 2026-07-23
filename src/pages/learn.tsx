@@ -316,28 +316,30 @@ function MythVsFactGame({ questions, onComplete }: { questions: Question[], onCo
   );
 }
 
-// GAME 2: Cortisol Slider (ULTIMATE VERSION: Zoned Bar, Water Drops, Bite-Sized Tips)
+// GAME 2: Cortisol Slider (THE ZEN EDITION)
 function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => void }) {
   const [level, setLevel] = useState(40);
-  const [timeLeft, setTimeLeft] = useState(30);
+  const [timeLeft, setTimeLeft] = useState(45); // Extended 45-second meditation
   const [status, setStatus] = useState<'playing' | 'won' | 'lost'>('playing');
   
   const [shieldActive, setShieldActive] = useState(false);
+  const [waterCharges, setWaterCharges] = useState(1); // Restored 1 simple charge
   
-  // New "Earnable" Shield Mechanics
-  const [waterCharges, setWaterCharges] = useState(0); 
-  const [waterProgress, setWaterProgress] = useState(0);
-  const [waterDrop, setWaterDrop] = useState<{id: number, top: string, left: string} | null>(null);
-
   const [isHolding, setIsHolding] = useState(false);
   const [breathPhase, setBreathPhase] = useState<'Inhale' | 'Exhale'>('Inhale');
+  const [holdDuration, setHoldDuration] = useState(0);
+
+  // Zen Mode: Acquired after holding smoothly for 12 continuous seconds
+  const isZenMode = holdDuration >= 12;
 
   const isHoldingRef = useRef(isHolding);
   useEffect(() => { isHoldingRef.current = isHolding; }, [isHolding]);
   const shieldRef = useRef(shieldActive);
   useEffect(() => { shieldRef.current = shieldActive; }, [shieldActive]);
+  const zenRef = useRef(isZenMode);
+  useEffect(() => { zenRef.current = isZenMode; }, [isZenMode]);
 
-  // Breathing Phase Timer
+  // Slow Breathing Phase Timer (4 seconds in, 4 seconds out)
   useEffect(() => {
     if (!isHolding) {
       setBreathPhase('Inhale');
@@ -345,31 +347,23 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
     }
     const cycle = setInterval(() => {
       setBreathPhase(p => (p === 'Inhale' ? 'Exhale' : 'Inhale'));
-    }, 2000);
+    }, 4000); 
     return () => clearInterval(cycle);
   }, [isHolding]);
 
-  // Water Drop Spawner (Every ~3.5 seconds if conditions met)
+  // Hold Duration Tracker for Zen Mode Power-Up
   useEffect(() => {
-    if (status !== 'playing' || shieldActive || waterCharges >= 1) {
-      setWaterDrop(null);
+    if (!isHolding || status !== 'playing') {
+      setHoldDuration(0);
       return;
     }
-    const spawner = setInterval(() => {
-      if (!waterDrop && Math.random() > 0.4) {
-        setWaterDrop({
-          id: Date.now(),
-          top: `${15 + Math.random() * 40}%`, // Keep in upper half so it doesn't block buttons
-          left: `${15 + Math.random() * 70}%`
-        });
-      } else if (waterDrop) {
-        setWaterDrop(null); // Despawn if missed
-      }
-    }, 3500);
-    return () => clearInterval(spawner);
-  }, [status, shieldActive, waterCharges, waterDrop]);
+    const holdTimer = setInterval(() => {
+      setHoldDuration(d => d + 1);
+    }, 1000);
+    return () => clearInterval(holdTimer);
+  }, [isHolding, status]);
 
-  // Main Game Loop (Cortisol Rise & Fall)
+  // Main Game Loop
   useEffect(() => {
     if (status !== 'playing') return;
     const timer = setInterval(() => {
@@ -384,8 +378,12 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
       setLevel(l => {
         if (shieldRef.current) return l; // Frozen completely by shield!
         
-        let newLevel = l + 10; // Natural rise
-        if (isHoldingRef.current) newLevel -= 20; // Active breath lowers it
+        let newLevel = l + 7; // Slowed natural rise to balance the 45s timer
+        
+        if (isHoldingRef.current) {
+          // If in Zen Mode, cortisol drops much faster!
+          newLevel -= zenRef.current ? 18 : 12; 
+        }
         
         if (newLevel >= 100) {
           setStatus('lost');
@@ -397,18 +395,6 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
     return () => clearInterval(timer);
   }, [status]);
 
-  const handleCollectDrop = (e: React.MouseEvent | React.TouchEvent) => {
-    e.stopPropagation();
-    setWaterDrop(null);
-    setWaterProgress(p => {
-      if (p + 1 >= 2) {
-        setWaterCharges(1);
-        return 0;
-      }
-      return p + 1;
-    });
-  };
-
   const useWater = () => {
     if (waterCharges > 0 && status === 'playing') {
       setWaterCharges(0);
@@ -418,16 +404,16 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
     }
   };
 
-  // Dynamic Bite-Sized Tips
+  // Dynamic Zen Tips
   let activeTip = "Watch the zones! Keep cortisol out of the red Danger area.";
   if (shieldActive) {
     activeTip = "🛡️ Cells hydrated! Physical stress response is frozen.";
+  } else if (isZenMode) {
+    activeTip = "✨ Flow State Achieved: Deep parasympathetic reset active!";
   } else if (isHolding) {
     activeTip = breathPhase === 'Inhale' 
-      ? "🫁 Oxygen entering: signaling safety to your brain..." 
-      : "😌 Exhaling: slowing heart rate naturally...";
-  } else if (waterDrop) {
-    activeTip = "💧 Tap the floating water drop to build your shield!";
+      ? "🫁 Deep inhale (4s)... fill your lungs..." 
+      : "😌 Slow exhale (4s)... release tension...";
   }
 
   if (status !== 'playing') {
@@ -435,11 +421,11 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
       <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white/90 backdrop-blur-md rounded-3xl p-8 text-center shadow-lg border border-white/50">
         <div className="text-6xl mb-4">{status === 'won' ? '🧘‍♀️' : '🤯'}</div>
         <h3 className={cn("text-2xl font-extrabold mb-2", status === 'won' ? "text-emerald-600" : "text-rose-600")}>
-          {status === 'won' ? "You kept your cool!" : "Cortisol Overload!"}
+          {status === 'won' ? "Deep Zen Achieved!" : "Cortisol Overload!"}
         </h3>
         <p className="text-sm font-medium text-gray-700 mb-8">
           {status === 'won' 
-            ? "By utilizing guided Inhale/Exhale pacing and maintaining hydration, you successfully buffered the stress response!" 
+            ? "By utilizing guided Inhale/Exhale pacing for 45 seconds, you successfully lowered your physical stress response!" 
             : "When cortisol runs wild, your brain demands fast energy (sugar). Remember to pace your breathing!"}
         </p>
         <Button onClick={() => onComplete(status === 'won' ? 4 : 0)} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">Continue</Button>
@@ -478,44 +464,31 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
         />
       </div>
 
-      {/* 2. EARNABLE WATER DROP SPAWNER */}
-      <AnimatePresence>
-        {waterDrop && (
-          <motion.button
-            key={waterDrop.id}
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: [1, 1.2, 1] }}
-            exit={{ opacity: 0, scale: 0 }}
-            transition={{ duration: 0.4, scale: { repeat: Infinity, duration: 1 } }}
-            onPointerDown={handleCollectDrop}
-            className="absolute z-50 text-3xl drop-shadow-md cursor-pointer touch-none"
-            style={{ top: waterDrop.top, left: waterDrop.left }}
-          >
-            💧
-          </motion.button>
-        )}
-      </AnimatePresence>
-
-      {/* The Biofeedback Orb */}
-      <div className="flex justify-center mb-4 relative h-32 items-center">
+      {/* The Biofeedback Orb - Slower 4s scaling with Zen Mode Aura */}
+      <div className="flex justify-center mb-6 relative h-36 items-center">
         <motion.div 
-          animate={{ scale: isHolding ? (breathPhase === 'Inhale' ? 1.3 : 0.85) : [1, 1.15, 1] }} 
-          transition={{ duration: isHolding ? 2 : 3, repeat: isHolding ? 0 : Infinity, ease: "easeInOut" }}
+          animate={{ 
+            scale: isHolding ? (breathPhase === 'Inhale' ? 1.35 : 0.8) : [1, 1.1, 1],
+            boxShadow: isZenMode ? "0px 0px 40px rgba(52, 211, 153, 0.8)" : "0px 0px 0px rgba(0,0,0,0)"
+          }} 
+          transition={{ duration: isHolding ? 4 : 4, repeat: isHolding ? 0 : Infinity, ease: "easeInOut" }}
           onPointerDown={(e) => { e.preventDefault(); setIsHolding(true); }}
           onPointerUp={(e) => { e.preventDefault(); setIsHolding(false); }}
           onPointerLeave={(e) => { e.preventDefault(); setIsHolding(false); }}
           onPointerCancel={(e) => { e.preventDefault(); setIsHolding(false); }}
           className={cn("absolute w-28 h-28 rounded-full border-4 flex flex-col items-center justify-center transition-colors cursor-pointer select-none touch-none", 
-            isHolding ? "bg-emerald-500 border-emerald-600 shadow-lg shadow-emerald-200" : "bg-indigo-50 border-indigo-200")}
+            isZenMode ? "bg-emerald-400 border-emerald-300 text-white" 
+            : isHolding ? "bg-emerald-500 border-emerald-600 shadow-lg" 
+            : "bg-indigo-50 border-indigo-200")}
         >
-          <span className="text-3xl mb-0.5">{isHolding ? (breathPhase === 'Inhale' ? '🫁' : '😌') : '🌬️'}</span>
-          <span className={cn("text-[10px] font-bold uppercase tracking-wider", isHolding ? "text-emerald-100" : "text-indigo-400")}>
-            {isHolding ? breathPhase : 'Hold Orb'}
+          <span className="text-4xl mb-0.5">{isHolding ? (breathPhase === 'Inhale' ? '🫁' : '😌') : '🌬️'}</span>
+          <span className={cn("text-[10px] font-bold uppercase tracking-wider", isHolding ? "text-white" : "text-indigo-400")}>
+            {isZenMode ? 'Zen Mode' : isHolding ? breathPhase : 'Hold Orb'}
           </span>
         </motion.div>
       </div>
 
-      {/* 3. BITE-SIZED DYNAMIC TIPS */}
+      {/* BITE-SIZED DYNAMIC TIPS */}
       <div className="h-10 flex items-center justify-center mb-2">
         <AnimatePresence mode="wait">
           <motion.p
@@ -524,7 +497,7 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -5 }}
             className={cn("text-[11px] font-bold px-4 text-center leading-tight", 
-              shieldActive ? "text-cyan-600" : level >= 80 ? "text-rose-600" : "text-indigo-600"
+              shieldActive ? "text-cyan-600" : isZenMode ? "text-emerald-600" : level >= 80 ? "text-rose-600" : "text-indigo-600"
             )}
           >
             {activeTip}
@@ -532,24 +505,18 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
         </AnimatePresence>
       </div>
 
-      {/* Shield Button / Progress */}
+      {/* Shield Button */}
       <div className="flex justify-center mb-6 relative z-10">
         <Button 
           disabled={waterCharges === 0 || shieldActive}
           onClick={useWater} 
-          className={cn("font-bold h-12 w-full max-w-[220px] rounded-2xl shadow-sm transition-all text-sm", 
+          className={cn("font-bold h-12 w-full max-w-[200px] rounded-2xl shadow-sm transition-all text-sm", 
             shieldActive ? "bg-cyan-400 text-white" 
-            : waterCharges > 0 ? "bg-cyan-500 hover:bg-cyan-600 text-white ring-2 ring-cyan-200" 
+            : waterCharges > 0 ? "bg-cyan-100 hover:bg-cyan-200 text-cyan-800" 
             : "bg-gray-100 text-gray-400"
           )}
         >
-          {shieldActive 
-            ? "Shield Active 🛡️" 
-            : waterCharges > 0 
-              ? "Use Hydration Shield 💧" 
-              : waterProgress === 1 
-                ? "Catch 1 more drop! 💧" 
-                : "Catch 2 drops for Shield"}
+          {shieldActive ? "Shield Active 🛡️" : waterCharges > 0 ? "Hydration Shield 💧" : "Water Used"}
         </Button>
       </div>
       
