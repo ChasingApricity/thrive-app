@@ -1121,7 +1121,7 @@ function FoodSwapGame({ onComplete }: { onComplete: (score: number) => void }) {
   );
 }
 
-// GAME 7: THE LOOP BREAKER (NEW TEEN-FOCUSED HABITS)
+// GAME 7: THE LOOP BREAKER (NOW WITH 3 LEVELS!)
 type LoopHabit = {
   id: string;
   name: string;
@@ -1131,19 +1131,21 @@ type LoopHabit = {
 
 const LOOP_HABITS: LoopHabit[] = [
   { id: 'music', name: 'Slow Music', emoji: '🎧', science: 'Rhythmic entrainment! Listening to 60 BPM music synchronizes your heartbeat and shifts brainwaves to a relaxed state.' },
-  { id: 'breathe', name: '4-7-8 Breath', emoji: '🫁', science: 'Parasympathetic reset! Deep exhales signal safety to the brain, halting cortisol production.' },
+  { id: 'breathe', name: '4-7-8 Breath', emoji: '🫁', science: 'Inhale for 4s, hold for 7s, exhale for 8s! Prolonged exhales trigger a parasympathetic reset, halting cortisol production.' },
   { id: 'move', name: '5-Min Walk', emoji: '👟', science: 'Glucose clearing! Light movement burns off stress adrenaline and stabilizes blood sugar spikes.' },
   { id: 'hydrate', name: 'Water First', emoji: '💧', science: 'Hydration shield! Hydrating prevents the brain from sending false starvation and craving signals.' },
-  { id: 'ground', name: '5-4-3-2-1 Rule', emoji: '👁️', science: 'Sensory grounding! Focusing on your senses pulls blood flow out of the panicked amygdala back to the logical prefrontal cortex.' },
+  { id: 'ground', name: '5-4-3-2-1', emoji: '👁️', science: 'Find 5 things you see, 4 you feel, 3 you hear, 2 you smell, 1 you taste. Grounding pulls blood flow back to your logical prefrontal cortex!' },
 ];
 
 function LoopBreakerGame({ onComplete }: { onComplete: (score: number) => void }) {
-  const [status, setStatus] = useState<'spinning' | 'broken'>('spinning');
+  const [level, setLevel] = useState(1);
+  const maxLevels = 3;
+  const [status, setStatus] = useState<'spinning' | 'broken' | 'done'>('spinning');
   const [chosenHabit, setChosenHabit] = useState<LoopHabit | null>(null);
   const targetRef = useRef<HTMLDivElement>(null);
 
   const handleDragEnd = (e: any, info: any, habit: LoopHabit) => {
-    if (!targetRef.current || status === 'broken') return;
+    if (!targetRef.current || status === 'broken' || status === 'done') return;
     const rect = targetRef.current.getBoundingClientRect();
 
     let clientX = info.point.x;
@@ -1170,6 +1172,16 @@ function LoopBreakerGame({ onComplete }: { onComplete: (score: number) => void }
     }
   };
 
+  const handleNextLevel = () => {
+    if (level < maxLevels) {
+      setLevel(l => l + 1);
+      setStatus('spinning');
+      setChosenHabit(null);
+    } else {
+      setStatus('done');
+    }
+  };
+
   const badNodes = [
     { icon: '😰', label: 'Stress' },
     { icon: '😴', label: 'Poor Sleep' },
@@ -1188,20 +1200,42 @@ function LoopBreakerGame({ onComplete }: { onComplete: (score: number) => void }
 
   const currentNodes = status === 'broken' ? goodNodes : badNodes;
 
+  // Level Progression Physics
+  const spinDuration = level === 1 ? 15 : level === 2 ? 8 : 4;
+  const loopColors = level === 1 ? 'border-rose-300 bg-rose-50/40' : level === 2 ? 'border-red-400 bg-red-50/40' : 'border-red-600 bg-red-100/50 shadow-red-200';
+  const levelTitle = level === 1 ? 'The Mild Stressor' : level === 2 ? 'The Bad Day' : 'The Doom Loop';
+
+  if (status === 'done') {
+    return (
+      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white/90 backdrop-blur-md rounded-3xl p-8 text-center shadow-lg border border-white/50">
+        <div className="text-6xl mb-4">🏆</div>
+        <h3 className="text-2xl font-extrabold mb-2 text-emerald-600">Doom Loop Shattered!</h3>
+        <p className="text-sm font-medium text-gray-700 mb-8">
+          You successfully broke all 3 stages of the biological stress cycle. You have the tools to pull yourself out of the loop anytime!
+        </p>
+        <Button onClick={() => onComplete(4)} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">Complete & Collect VP</Button>
+      </motion.div>
+    );
+  }
+
   return (
     <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-lg border border-white/50 text-center relative overflow-hidden select-none">
-      <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-2">Loop Breaker</p>
+      <div className="flex justify-between items-center mb-2">
+        <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Loop Breaker</p>
+        <p className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded-md">Level {level}/{maxLevels}</p>
+      </div>
 
       {status === 'spinning' ? (
-        <>
-          <p className="text-sm font-medium text-gray-600 mb-4">Drag ANY biological habit into the Doom Loop to break the cycle!</p>
+        <motion.div key={`level-${level}`} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+          <p className="text-sm font-bold text-rose-600 mb-1">{levelTitle}</p>
+          <p className="text-xs font-medium text-gray-600 mb-4">Drag ANY biological habit into the center to break the cycle!</p>
 
           {/* SPINNING DOOM LOOP TARGET */}
           <div ref={targetRef} className="relative h-64 w-full flex items-center justify-center mb-6">
             <motion.div
               animate={{ rotate: 360 }}
-              transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
-              className="w-52 h-52 rounded-full border-2 border-dashed border-rose-300 flex items-center justify-center relative shadow-inner bg-rose-50/40"
+              transition={{ duration: spinDuration, repeat: Infinity, ease: 'linear' }}
+              className={cn("w-52 h-52 rounded-full border-2 border-dashed flex items-center justify-center relative shadow-inner transition-colors duration-500", loopColors)}
             >
               {badNodes.map((node, i) => {
                 const angle = (i * 2 * Math.PI) / 5 - Math.PI / 2;
@@ -1242,12 +1276,12 @@ function LoopBreakerGame({ onComplete }: { onComplete: (score: number) => void }
                   className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl p-2 flex flex-col items-center justify-center gap-0.5 shadow-sm cursor-grab touch-none text-emerald-900"
                 >
                   <span className="text-xl">{habit.emoji}</span>
-                  <span className="text-[9px] font-extrabold leading-tight text-center">{habit.name}</span>
+                  <span className="text-[8px] font-extrabold leading-tight text-center">{habit.name}</span>
                 </motion.div>
               ))}
             </div>
           </div>
-        </>
+        </motion.div>
       ) : (
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="space-y-6">
           <div className="text-6xl my-2">💥✨</div>
@@ -1289,8 +1323,8 @@ function LoopBreakerGame({ onComplete }: { onComplete: (score: number) => void }
             </p>
           </div>
 
-          <Button onClick={() => onComplete(4)} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">
-            Collect VP & Complete
+          <Button onClick={handleNextLevel} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">
+            {level < maxLevels ? `Advance to Level ${level + 1} 🚀` : 'Complete Game 🏆'}
           </Button>
         </motion.div>
       )}
