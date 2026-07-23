@@ -319,18 +319,17 @@ function MythVsFactGame({ questions, onComplete }: { questions: Question[], onCo
 // GAME 2: Cortisol Slider (THE ZEN EDITION)
 function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => void }) {
   const [level, setLevel] = useState(40);
-  const [timeLeft, setTimeLeft] = useState(45); // Extended 45-second meditation
+  const [timeLeft, setTimeLeft] = useState(50); 
   const [status, setStatus] = useState<'playing' | 'won' | 'lost'>('playing');
   
   const [shieldActive, setShieldActive] = useState(false);
-  const [waterCharges, setWaterCharges] = useState(1); // Restored 1 simple charge
+  const [waterCharges, setWaterCharges] = useState(1); 
   
   const [isHolding, setIsHolding] = useState(false);
   const [breathPhase, setBreathPhase] = useState<'Inhale' | 'Exhale'>('Inhale');
   const [holdDuration, setHoldDuration] = useState(0);
 
-  // Zen Mode: Acquired after holding smoothly for 12 continuous seconds
-  const isZenMode = holdDuration >= 12;
+  const isZenMode = holdDuration >= 16;
 
   const isHoldingRef = useRef(isHolding);
   useEffect(() => { isHoldingRef.current = isHolding; }, [isHolding]);
@@ -339,7 +338,6 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
   const zenRef = useRef(isZenMode);
   useEffect(() => { zenRef.current = isZenMode; }, [isZenMode]);
 
-  // Slow Breathing Phase Timer (4 seconds in, 4 seconds out)
   useEffect(() => {
     if (!isHolding) {
       setBreathPhase('Inhale');
@@ -351,7 +349,6 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
     return () => clearInterval(cycle);
   }, [isHolding]);
 
-  // Hold Duration Tracker for Zen Mode Power-Up
   useEffect(() => {
     if (!isHolding || status !== 'playing') {
       setHoldDuration(0);
@@ -363,7 +360,6 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
     return () => clearInterval(holdTimer);
   }, [isHolding, status]);
 
-  // Main Game Loop
   useEffect(() => {
     if (status !== 'playing') return;
     const timer = setInterval(() => {
@@ -376,12 +372,11 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
       });
 
       setLevel(l => {
-        if (shieldRef.current) return l; // Frozen completely by shield!
+        if (shieldRef.current) return l; 
         
-        let newLevel = l + 7; // Slowed natural rise to balance the 45s timer
+        let newLevel = l + 7; 
         
         if (isHoldingRef.current) {
-          // If in Zen Mode, cortisol drops much faster!
           newLevel -= zenRef.current ? 18 : 12; 
         }
         
@@ -399,12 +394,11 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
     if (waterCharges > 0 && status === 'playing') {
       setWaterCharges(0);
       setShieldActive(true);
-      setLevel(l => Math.max(0, l - 25)); // Instant inflammation relief
-      setTimeout(() => setShieldActive(false), 5000); // 5-second complete freeze
+      setLevel(l => Math.max(0, l - 25)); 
+      setTimeout(() => setShieldActive(false), 5000); 
     }
   };
 
-  // Dynamic Zen Tips
   let activeTip = "Watch the zones! Keep cortisol out of the red Danger area.";
   if (shieldActive) {
     activeTip = "🛡️ Cells hydrated! Physical stress response is frozen.";
@@ -437,7 +431,6 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
     <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-lg border border-white/50 text-center relative overflow-hidden select-none">
       <p className="text-xs font-bold text-orange-500 uppercase tracking-wider mb-2">Keep it chill!</p>
       
-      {/* 1. DANGER ZONE BAR */}
       <div className="flex justify-between font-bold text-gray-700 mb-2 mt-4 relative z-10">
         <span>Cortisol Level</span>
         <span className={level >= 80 ? "text-red-600 font-extrabold" : level >= 50 ? "text-amber-500" : "text-emerald-600"}>
@@ -446,14 +439,12 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
       </div>
       
       <div className="relative h-6 w-full bg-gray-200 rounded-full overflow-hidden mb-6 shadow-inner border border-gray-100 transition-all">
-        {/* Labeled Zones Overlay */}
         <div className="absolute inset-0 flex text-[9px] font-extrabold uppercase tracking-wider text-gray-500 z-10 pointer-events-none mix-blend-color-burn opacity-70">
           <div className="w-[50%] h-full flex items-center justify-start pl-3 border-r border-gray-400/30">Rest</div>
           <div className="w-[30%] h-full flex items-center justify-center border-r border-gray-400/30">Alert</div>
           <div className="w-[20%] h-full flex items-center justify-end pr-2 text-red-900">Danger</div>
         </div>
         
-        {/* Dynamic Progress Fill */}
         <motion.div 
           className="h-full relative z-0" 
           animate={{ 
@@ -464,7 +455,6 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
         />
       </div>
 
-      {/* The Biofeedback Orb - Slower 4s scaling with Zen Mode Aura */}
       <div className="flex justify-center mb-6 relative h-36 items-center">
         <motion.div 
           animate={{ 
@@ -488,7 +478,6 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
         </motion.div>
       </div>
 
-      {/* BITE-SIZED DYNAMIC TIPS */}
       <div className="h-10 flex items-center justify-center mb-2">
         <AnimatePresence mode="wait">
           <motion.p
@@ -505,7 +494,6 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
         </AnimatePresence>
       </div>
 
-      {/* Shield Button */}
       <div className="flex justify-center mb-6 relative z-10">
         <Button 
           disabled={waterCharges === 0 || shieldActive}
@@ -527,7 +515,7 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
   );
 }
 
-// GAME 3: Build-a-Plate (Gut Health)
+// GAME 3: Build-a-Plate (THE TAMAGOTCHI PET EDITION!)
 type FoodItem = { id: number; name: string; emoji: string; isGood: boolean; explanation: string; };
 const GUT_FOODS: FoodItem[] = [
   { id: 1, name: 'Oats', emoji: '🥣', isGood: true, explanation: 'Rich in beta-glucan fiber, feeding good bacteria.' },
@@ -548,24 +536,65 @@ function GutHealthPlateGame({ onComplete }: { onComplete: (score: number) => voi
   const [plate, setPlate] = useState<FoodItem[]>([]);
   const [status, setStatus] = useState<'playing' | 'done'>('playing');
   
+  // Tamagotchi State
+  const [petHealth, setPetHealth] = useState(50); // Starts at 50%
+  const [petState, setPetState] = useState<'idle' | 'happy' | 'sick'>('idle');
+  const [floatingParticles, setFloatingParticles] = useState<{id: number, emoji: string}[]>([]);
+
   const handleTap = (food: FoodItem) => {
-    if (status === 'playing' && plate.length < 5) {
-      setPlate([...plate, food]);
+    // Prevent tapping while animation is playing or game is over
+    if (status !== 'playing' || plate.length >= 5 || petState !== 'idle') return;
+    
+    // Calculate new health (Good = +20, Bad = -20)
+    const newHealth = Math.max(0, Math.min(100, petHealth + (food.isGood ? 20 : -20)));
+    setPetHealth(newHealth);
+    setPlate([...plate, food]);
+    setPetState(food.isGood ? 'happy' : 'sick');
+    
+    // Spawn reaction particle
+    const particle = { id: Date.now(), emoji: food.isGood ? '✨' : '💨' };
+    setFloatingParticles([particle]);
+
+    // Reset pet animation after 800ms
+    setTimeout(() => {
+      setFloatingParticles([]);
       if (plate.length + 1 === 5) {
-        setTimeout(() => setStatus('done'), 500);
+        setStatus('done');
+      } else {
+        setPetState('idle');
       }
-    }
+    }, 800);
   };
 
-  const score = plate.filter(f => f.isGood).length;
-  const isWon = score >= 3;
+  const isWon = petHealth >= 70; // 70+ HP means they fed it mostly good food
+
+  const getPetVisuals = () => {
+    if (status === 'done') return isWon ? { emoji: '🥰', bg: 'bg-emerald-400 border-emerald-200', bounce: true } : { emoji: '🤒', bg: 'bg-rose-400 border-rose-200', shake: true };
+    if (petState === 'happy') return { emoji: '😋', bg: 'bg-emerald-400 border-emerald-200', bounce: true };
+    if (petState === 'sick') return { emoji: '🤢', bg: 'bg-rose-400 border-rose-200', shake: true };
+    if (petHealth > 70) return { emoji: '😊', bg: 'bg-emerald-300 border-emerald-100' };
+    if (petHealth < 30) return { emoji: '😵‍💫', bg: 'bg-rose-300 border-rose-100' };
+    return { emoji: '🦠', bg: 'bg-indigo-300 border-indigo-100' };
+  };
+
+  const visuals = getPetVisuals();
 
   if (status === 'done') {
     return (
       <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white/90 backdrop-blur-md rounded-3xl p-6 text-center shadow-lg border border-white/50">
+        
+        {/* End Game Mascot */}
+        <div className="flex justify-center mb-4">
+          <div className={cn("w-24 h-24 rounded-full flex items-center justify-center text-6xl shadow-md border-4", visuals.bg)}>
+            {visuals.emoji}
+          </div>
+        </div>
+
         <h3 className={cn("text-2xl font-extrabold mb-4", isWon ? "text-emerald-600" : "text-rose-600")}>
-          {isWon ? "Happy Microbiome! ✨" : "Gut Bugs are Starving! 📉"}
+          {isWon ? "Gubby is Thriving! ✨" : "Gubby is Starving! 📉"}
         </h3>
+        
+        {/* Educational Breakdown */}
         <div className="space-y-2 mb-6 text-left h-56 overflow-y-auto pr-2 custom-scrollbar">
           {plate.map((food, i) => (
             <div key={i} className="flex gap-3 items-start bg-white p-3 rounded-xl shadow-sm border border-gray-100">
@@ -585,19 +614,72 @@ function GutHealthPlateGame({ onComplete }: { onComplete: (score: number) => voi
   }
 
   return (
-    <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-lg border border-white/50 text-center relative">
-      <p className="text-xs font-bold text-green-600 uppercase tracking-wider mb-2">Build a Gut-Happy Plate</p>
-      <p className="text-sm font-medium text-gray-600 mb-6">Tap 5 foods to feed your microbiome!</p>
+    <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-lg border border-white/50 text-center relative overflow-hidden">
+      <p className="text-xs font-bold text-green-600 uppercase tracking-wider mb-2">Feed Your Microbiome</p>
+      <p className="text-sm font-medium text-gray-600 mb-6">Keep Gubby in the green by picking 5 foods!</p>
       
-      <div className="flex justify-center gap-2 mb-6 h-14">
+      {/* THE PET STAGE */}
+      <div className="flex flex-col items-center justify-center mb-6 relative">
+        <div className="relative">
+          <motion.div 
+            animate={
+              visuals.bounce ? { y: [0, -15, 0], scale: [1, 1.1, 1] } : 
+              visuals.shake ? { x: [-5, 5, -5, 5, 0], filter: "sepia(100%) hue-rotate(90deg)" } : 
+              { y: [0, -5, 0] }
+            }
+            transition={ visuals.bounce || visuals.shake ? { duration: 0.4 } : { duration: 2, repeat: Infinity } }
+            className={cn("w-28 h-28 rounded-full flex items-center justify-center text-6xl shadow-lg border-4 transition-colors duration-300 z-10 relative", visuals.bg)}
+          >
+            {visuals.emoji}
+          </motion.div>
+
+          {/* Floating Particles */}
+          <AnimatePresence>
+            {floatingParticles.map(p => (
+              <motion.div
+                key={p.id}
+                initial={{ opacity: 1, y: 0, scale: 0.5 }}
+                animate={{ opacity: 0, y: -40, scale: 1.5 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.8 }}
+                className="absolute top-0 right-0 z-20 text-3xl pointer-events-none"
+              >
+                {p.emoji}
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+
+        {/* Health Bar */}
+        <div className="w-full max-w-[200px] mt-4">
+          <div className="flex justify-between text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+            <span>HP</span>
+            <span>{petHealth}/100</span>
+          </div>
+          <div className="h-3 w-full bg-gray-200 rounded-full overflow-hidden shadow-inner">
+            <motion.div 
+              className="h-full" 
+              animate={{ 
+                width: `${petHealth}%`, 
+                backgroundColor: petHealth > 70 ? "#34D399" : petHealth >= 30 ? "#FBBF24" : "#EF4444" 
+              }} 
+              transition={{ type: "spring", stiffness: 100 }} 
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* The Feeding History (Replaces dashed plate circles) */}
+      <div className="flex justify-center gap-2 mb-6 h-10">
         {[0, 1, 2, 3, 4].map(i => (
-          <div key={i} className="w-12 h-12 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center text-2xl shadow-inner">
+          <div key={i} className="w-10 h-10 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center text-xl shadow-inner">
             {plate[i] ? <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }}>{plate[i].emoji}</motion.span> : ''}
           </div>
         ))}
       </div>
       
-      <div className="grid grid-cols-4 gap-2 mb-2">
+      {/* Food Selection Grid */}
+      <div className={cn("grid grid-cols-4 gap-2 mb-2 transition-opacity", petState !== 'idle' ? "opacity-50 pointer-events-none" : "opacity-100")}>
         {GUT_FOODS.map(food => (
           <motion.button key={food.id} whileTap={{ scale: 0.9 }} onClick={() => handleTap(food)} className="flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 p-2 rounded-xl border border-gray-100 shadow-sm">
             <span className="text-3xl mb-1">{food.emoji}</span>
