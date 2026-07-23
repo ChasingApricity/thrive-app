@@ -861,7 +861,7 @@ function SleepGame({ onComplete }: { onComplete: (score: number) => void }) {
   );
 }
 
-// GAME 6: The Swap It Challenge (DRAG & DROP WITH 5 ROUNDS!)
+// GAME 6: The Swap It Challenge (THE FLAWLESS PHYSICS EDITION)
 type SwapRound = { craving: string; cravingEmoji: string; correct: string; correctEmoji: string; wrong: string; wrongEmoji: string; explanation: string };
 const SWAP_ROUNDS: SwapRound[] = [
   { craving: "Sugary Donut", cravingEmoji: "🍩", correct: "Apple & Almonds", correctEmoji: "🍎🥜", wrong: "Energy Drink", wrongEmoji: "🥤", explanation: "Apples and almonds provide fiber and healthy fats, giving you steady energy instead of a rapid sugar crash!" },
@@ -891,11 +891,26 @@ function FoodSwapGame({ onComplete }: { onComplete: (score: number) => void }) {
     if (!dropZoneRef.current) return;
     const rect = dropZoneRef.current.getBoundingClientRect();
     
+    // Safety check to ensure we get reliable viewport coordinates regardless of device or scroll depth
+    let clientX = info.point.x;
+    let clientY = info.point.y;
+
+    if (e.changedTouches && e.changedTouches.length > 0) {
+      clientX = e.changedTouches[0].clientX;
+      clientY = e.changedTouches[0].clientY;
+    } else if (e.clientX !== undefined && e.clientY !== undefined) {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+
+    // 50px buffer makes the drop zone massive and forgiving for thumbs!
+    const buffer = 50;
+
     if (
-      info.point.x >= rect.left &&
-      info.point.x <= rect.right &&
-      info.point.y >= rect.top &&
-      info.point.y <= rect.bottom
+      clientX >= (rect.left - buffer) &&
+      clientX <= (rect.right + buffer) &&
+      clientY >= (rect.top - buffer) &&
+      clientY <= (rect.bottom + buffer)
     ) {
       handleSwap(isCorrect);
     }
