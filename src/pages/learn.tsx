@@ -316,18 +316,16 @@ function MythVsFactGame({ questions, onComplete }: { questions: Question[], onCo
   );
 }
 
-// GAME 2: Cortisol Slider (NOW WITH BIOFEEDBACK ORB AND HYDRATION SHIELD!)
+// GAME 2: Cortisol Slider (UPDATED: INTERACTIVE ORB & BUFFED SHIELD)
 function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => void }) {
   const [level, setLevel] = useState(40);
-  const [timeLeft, setTimeLeft] = useState(15); // Extended time slightly for the mechanic
+  const [timeLeft, setTimeLeft] = useState(15);
   const [status, setStatus] = useState<'playing' | 'won' | 'lost'>('playing');
   
-  // New Mechanics State
   const [shieldActive, setShieldActive] = useState(false);
   const [waterCharges, setWaterCharges] = useState(1);
   const [isHolding, setIsHolding] = useState(false);
 
-  // We use refs inside intervals to avoid dependency loops
   const isHoldingRef = React.useRef(isHolding);
   useEffect(() => { isHoldingRef.current = isHolding; }, [isHolding]);
   const shieldRef = React.useRef(shieldActive);
@@ -349,12 +347,12 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
         
         // Cortisol naturally spikes unless the shield is active
         if (!shieldRef.current) {
-          newLevel += 10; 
+          newLevel += 12; // Made slightly harder since breathing is stronger
         }
         
-        // Breathing actively lowers it
+        // Holding the orb actively lowers it faster now
         if (isHoldingRef.current) {
-          newLevel -= 18; 
+          newLevel -= 22; 
         }
 
         if (newLevel >= 100) {
@@ -371,7 +369,10 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
     if (waterCharges > 0 && status === 'playing') {
       setWaterCharges(0);
       setShieldActive(true);
-      // Hydration Shield completely stops cortisol rise for 4 seconds
+      
+      // BUFF: Instantly drops cortisol by 25 points so you don't instantly lose after the shield drops!
+      setLevel(l => Math.max(0, l - 25));
+      
       setTimeout(() => setShieldActive(false), 4000);
     }
   };
@@ -386,7 +387,7 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
         <p className="text-sm font-medium text-gray-700 mb-8">
           {status === 'won' 
             ? "By utilizing focused breathing and strategic hydration, you successfully buffered the physical stress response!" 
-            : "When cortisol runs wild, your brain demands fast energy (sugar). Remember your Hydration Shield next time!"}
+            : "When cortisol runs wild, your brain demands fast energy (sugar). Remember to use your Hydration Shield!"}
         </p>
         <Button onClick={() => onComplete(status === 'won' ? 4 : 0)} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">Continue</Button>
       </motion.div>
@@ -396,7 +397,7 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
   return (
     <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-lg border border-white/50 text-center relative overflow-hidden select-none">
       <p className="text-xs font-bold text-orange-500 uppercase tracking-wider mb-2">Keep it chill!</p>
-      <p className="text-sm font-medium text-gray-600 mb-6">Hold to breathe and use water to shield spikes!</p>
+      <p className="text-sm font-medium text-gray-600 mb-6">Touch and hold the orb to breathe.</p>
       
       <div className="flex justify-between font-bold text-gray-700 mb-2">
         <span>Cortisol Level</span>
@@ -415,39 +416,35 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
         />
       </div>
 
-      {/* The Biofeedback Orb */}
+      {/* The Biofeedback Orb - NOW INTERACTIVE */}
       <div className="flex justify-center mb-8 relative h-32 items-center">
         <motion.div 
-          animate={{ scale: [1, 1.4, 1] }} 
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          className={cn("absolute w-24 h-24 rounded-full border-4 flex items-center justify-center transition-colors", 
-            isHolding ? "bg-emerald-100 border-emerald-400" : "bg-indigo-50 border-indigo-200")}
+          animate={{ scale: isHolding ? 0.85 : [1, 1.2, 1] }} 
+          transition={{ duration: isHolding ? 0.2 : 3, repeat: isHolding ? 0 : Infinity, ease: "easeInOut" }}
+          onPointerDown={(e) => { e.preventDefault(); setIsHolding(true); }}
+          onPointerUp={(e) => { e.preventDefault(); setIsHolding(false); }}
+          onPointerLeave={(e) => { e.preventDefault(); setIsHolding(false); }}
+          onPointerCancel={(e) => { e.preventDefault(); setIsHolding(false); }}
+          className={cn("absolute w-28 h-28 rounded-full border-4 flex flex-col items-center justify-center transition-colors cursor-pointer select-none touch-none", 
+            isHolding ? "bg-emerald-500 border-emerald-600 shadow-lg shadow-emerald-200" : "bg-indigo-50 border-indigo-200")}
         >
-          <span className="text-3xl opacity-50">{isHolding ? '😌' : '🌬️'}</span>
+          <span className="text-4xl mb-1">{isHolding ? '😌' : '🌬️'}</span>
+          <span className={cn("text-[10px] font-bold uppercase tracking-wider", isHolding ? "text-emerald-100" : "text-indigo-400")}>
+            {isHolding ? 'Exhale...' : 'Hold Orb'}
+          </span>
         </motion.div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mb-6 relative z-10">
+      <div className="flex justify-center mb-6 relative z-10">
         <Button 
           disabled={waterCharges === 0 || shieldActive}
           onClick={useWater} 
-          className={cn("font-bold h-14 rounded-2xl shadow-sm transition-all text-sm", 
+          className={cn("font-bold h-12 w-full max-w-[200px] rounded-2xl shadow-sm transition-all text-sm", 
             shieldActive ? "bg-cyan-400 text-white" : waterCharges > 0 ? "bg-cyan-100 hover:bg-cyan-200 text-cyan-800" : "bg-gray-100 text-gray-400"
           )}
         >
           {shieldActive ? "Shield Active 🛡️" : waterCharges > 0 ? "Hydration Shield 💧" : "Water Empty"}
         </Button>
-        <button 
-          onPointerDown={(e) => { e.preventDefault(); setIsHolding(true); }}
-          onPointerUp={(e) => { e.preventDefault(); setIsHolding(false); }}
-          onPointerLeave={(e) => { e.preventDefault(); setIsHolding(false); }}
-          onPointerCancel={(e) => { e.preventDefault(); setIsHolding(false); }}
-          className={cn("font-bold h-14 rounded-2xl shadow-sm transition-all select-none text-sm border-none flex items-center justify-center", 
-            isHolding ? "bg-emerald-500 text-white scale-95" : "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
-          )}
-        >
-          {isHolding ? "Holding..." : "Hold to Breathe"}
-        </button>
       </div>
       
       <div className="text-3xl font-extrabold text-indigo-900 bg-indigo-50 py-3 rounded-xl border-2 border-indigo-100">
@@ -457,7 +454,7 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
   );
 }
 
-// GAME 3: Build-a-Plate
+// GAME 3: Build-a-Plate (Gut Health)
 type FoodItem = { id: number; name: string; emoji: string; isGood: boolean; explanation: string; };
 const GUT_FOODS: FoodItem[] = [
   { id: 1, name: 'Oats', emoji: '🥣', isGood: true, explanation: 'Rich in beta-glucan fiber, feeding good bacteria.' },
@@ -1022,4 +1019,3 @@ export default function Learn() {
     </Page>
   );
 }
-
