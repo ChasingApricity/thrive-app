@@ -1121,7 +1121,7 @@ function FoodSwapGame({ onComplete }: { onComplete: (score: number) => void }) {
   );
 }
 
-// GAME 7: THE LOOP BREAKER (NOW WITH 3 LEVELS!)
+// GAME 7: THE LOOP BREAKER (HABIT STACKING & COMBO SYNERGY EDITION!)
 type LoopHabit = {
   id: string;
   name: string;
@@ -1130,22 +1130,28 @@ type LoopHabit = {
 };
 
 const LOOP_HABITS: LoopHabit[] = [
-  { id: 'music', name: 'Slow Music', emoji: '🎧', science: 'Rhythmic entrainment! Listening to 60 BPM music synchronizes your heartbeat and shifts brainwaves to a relaxed state.' },
-  { id: 'breathe', name: '4-7-8 Breath', emoji: '🫁', science: 'Inhale for 4s, hold for 7s, exhale for 8s! Prolonged exhales trigger a parasympathetic reset, halting cortisol production.' },
+  { id: 'music', name: 'Slow Music', emoji: '🎧', science: 'Rhythmic entrainment! 60 BPM music synchronizes your heartbeat and shifts brainwaves to a relaxed state.' },
+  { id: 'breathe', name: '4-7-8 Breath', emoji: '🫁', science: 'Inhale 4s, hold 7s, exhale 8s! Prolonged exhales trigger a parasympathetic reset, halting cortisol.' },
   { id: 'move', name: '5-Min Walk', emoji: '👟', science: 'Glucose clearing! Light movement burns off stress adrenaline and stabilizes blood sugar spikes.' },
   { id: 'hydrate', name: 'Water First', emoji: '💧', science: 'Hydration shield! Hydrating prevents the brain from sending false starvation and craving signals.' },
-  { id: 'ground', name: '5-4-3-2-1', emoji: '👁️', science: 'Find 5 things you see, 4 you feel, 3 you hear, 2 you smell, 1 you taste. Grounding pulls blood flow back to your logical prefrontal cortex!' },
+  { id: 'ground', name: '5-4-3-2-1', emoji: '👁️', science: 'Sensory grounding pulls blood flow out of your panicked amygdala back to your logical prefrontal cortex!' },
 ];
 
 function LoopBreakerGame({ onComplete }: { onComplete: (score: number) => void }) {
   const [level, setLevel] = useState(1);
   const maxLevels = 3;
   const [status, setStatus] = useState<'spinning' | 'broken' | 'done'>('spinning');
-  const [chosenHabit, setChosenHabit] = useState<LoopHabit | null>(null);
+  
+  // Array to hold multiple dropped habits
+  const [chosenHabits, setChosenHabits] = useState<LoopHabit[]>([]);
   const targetRef = useRef<HTMLDivElement>(null);
 
   const handleDragEnd = (e: any, info: any, habit: LoopHabit) => {
     if (!targetRef.current || status === 'broken' || status === 'done') return;
+    
+    // Prevent dragging the exact same habit multiple times
+    if (chosenHabits.some(h => h.id === habit.id)) return;
+
     const rect = targetRef.current.getBoundingClientRect();
 
     let clientX = info.point.x;
@@ -1167,8 +1173,13 @@ function LoopBreakerGame({ onComplete }: { onComplete: (score: number) => void }
       clientY >= (rect.top - buffer) &&
       clientY <= (rect.bottom + buffer)
     ) {
-      setChosenHabit(habit);
-      setStatus('broken');
+      const newHabits = [...chosenHabits, habit];
+      setChosenHabits(newHabits);
+      
+      // Level 1 needs 1 habit, Level 2 needs 2, Level 3 needs 3
+      if (newHabits.length >= level) {
+        setStatus('broken');
+      }
     }
   };
 
@@ -1176,11 +1187,27 @@ function LoopBreakerGame({ onComplete }: { onComplete: (score: number) => void }
     if (level < maxLevels) {
       setLevel(l => l + 1);
       setStatus('spinning');
-      setChosenHabit(null);
+      setChosenHabits([]);
     } else {
       setStatus('done');
     }
   };
+
+  const checkCombos = () => {
+    const ids = chosenHabits.map(h => h.id);
+    if (ids.includes('hydrate') && ids.includes('move')) {
+       return { title: "🔥 Combo: The Cortisol Flush!", text: "Hydration + Movement clears stress hormones 2x faster!" };
+    }
+    if (ids.includes('breathe') && ids.includes('ground')) {
+       return { title: "🔥 Combo: The Panic Override!", text: "Deep breathing + sensory grounding immediately shuts down the amygdala." };
+    }
+    if (ids.includes('music') && ids.includes('breathe')) {
+       return { title: "🔥 Combo: The Zen Master!", text: "Rhythmic entrainment + parasympathetic breathing forces your heart rate to plummet." };
+    }
+    return null;
+  };
+
+  const comboFeedback = checkCombos();
 
   const badNodes = [
     { icon: '😰', label: 'Stress' },
@@ -1200,10 +1227,12 @@ function LoopBreakerGame({ onComplete }: { onComplete: (score: number) => void }
 
   const currentNodes = status === 'broken' ? goodNodes : badNodes;
 
-  // Level Progression Physics
-  const spinDuration = level === 1 ? 15 : level === 2 ? 8 : 4;
+  // Visual feedback: Spin slower as habits are added
+  const baseSpinDuration = level === 1 ? 15 : level === 2 ? 8 : 4;
+  const currentSpinDuration = baseSpinDuration + (chosenHabits.length * 4);
+  
   const loopColors = level === 1 ? 'border-rose-300 bg-rose-50/40' : level === 2 ? 'border-red-400 bg-red-50/40' : 'border-red-600 bg-red-100/50 shadow-red-200';
-  const levelTitle = level === 1 ? 'The Mild Stressor' : level === 2 ? 'The Bad Day' : 'The Doom Loop';
+  const levelTitle = level === 1 ? 'The Mild Stressor (Need 1 Habit)' : level === 2 ? 'The Bad Day (Need 2 Habits)' : 'The Doom Loop (Need 3 Habits)';
 
   if (status === 'done') {
     return (
@@ -1211,7 +1240,7 @@ function LoopBreakerGame({ onComplete }: { onComplete: (score: number) => void }
         <div className="text-6xl mb-4">🏆</div>
         <h3 className="text-2xl font-extrabold mb-2 text-emerald-600">Doom Loop Shattered!</h3>
         <p className="text-sm font-medium text-gray-700 mb-8">
-          You successfully broke all 3 stages of the biological stress cycle. You have the tools to pull yourself out of the loop anytime!
+          You successfully stacked habits to break all 3 stages of the biological stress cycle. You now have the ultimate tools to pull yourself out of the loop!
         </p>
         <Button onClick={() => onComplete(4)} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">Complete & Collect VP</Button>
       </motion.div>
@@ -1228,13 +1257,13 @@ function LoopBreakerGame({ onComplete }: { onComplete: (score: number) => void }
       {status === 'spinning' ? (
         <motion.div key={`level-${level}`} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
           <p className="text-sm font-bold text-rose-600 mb-1">{levelTitle}</p>
-          <p className="text-xs font-medium text-gray-600 mb-4">Drag ANY biological habit into the center to break the cycle!</p>
+          <p className="text-[11px] font-medium text-gray-600 mb-4">Stack habits in the center to slow and break the cycle!</p>
 
           {/* SPINNING DOOM LOOP TARGET */}
           <div ref={targetRef} className="relative h-64 w-full flex items-center justify-center mb-6">
             <motion.div
               animate={{ rotate: 360 }}
-              transition={{ duration: spinDuration, repeat: Infinity, ease: 'linear' }}
+              transition={{ duration: currentSpinDuration, repeat: Infinity, ease: 'linear' }}
               className={cn("w-52 h-52 rounded-full border-2 border-dashed flex items-center justify-center relative shadow-inner transition-colors duration-500", loopColors)}
             >
               {badNodes.map((node, i) => {
@@ -1254,10 +1283,18 @@ function LoopBreakerGame({ onComplete }: { onComplete: (score: number) => void }
               })}
             </motion.div>
 
-            {/* Target Ring Overlay */}
-            <div className="absolute w-24 h-24 rounded-full border-2 border-rose-400 border-dashed animate-pulse bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center pointer-events-none shadow-md">
-              <span className="text-2xl mb-0.5">💥</span>
-              <span className="text-[9px] font-extrabold text-rose-700 uppercase tracking-tight">Drop Here</span>
+            {/* Target Ring Overlay / Stack Display */}
+            <div className="absolute w-28 h-28 rounded-full border-2 border-rose-400 border-dashed animate-pulse bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center shadow-md">
+              {chosenHabits.length > 0 ? (
+                <div className="flex flex-wrap justify-center gap-1 p-2 pointer-events-none">
+                  {chosenHabits.map(h => <span key={h.id} className="text-xl">{h.emoji}</span>)}
+                </div>
+              ) : (
+                <>
+                  <span className="text-2xl mb-0.5 pointer-events-none">💥</span>
+                  <span className="text-[9px] font-extrabold text-rose-700 uppercase tracking-tight pointer-events-none">Drop Here</span>
+                </>
+              )}
             </div>
           </div>
 
@@ -1265,30 +1302,36 @@ function LoopBreakerGame({ onComplete }: { onComplete: (score: number) => void }
           <div className="space-y-2">
             <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Your Habit Arsenal ⬇️</p>
             <div className="grid grid-cols-5 gap-1.5 relative z-20">
-              {LOOP_HABITS.map((habit) => (
-                <motion.div
-                  key={habit.id}
-                  drag
-                  dragSnapToOrigin={true}
-                  dragElastic={0.2}
-                  whileDrag={{ scale: 1.15, zIndex: 50, cursor: 'grabbing' }}
-                  onDragEnd={(e, info) => handleDragEnd(e, info, habit)}
-                  className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl p-2 flex flex-col items-center justify-center gap-0.5 shadow-sm cursor-grab touch-none text-emerald-900"
-                >
-                  <span className="text-xl">{habit.emoji}</span>
-                  <span className="text-[8px] font-extrabold leading-tight text-center">{habit.name}</span>
-                </motion.div>
-              ))}
+              {LOOP_HABITS.map((habit) => {
+                const isUsed = chosenHabits.some(h => h.id === habit.id);
+                return (
+                  <motion.div
+                    key={habit.id}
+                    drag={!isUsed}
+                    dragSnapToOrigin={true}
+                    dragElastic={0.2}
+                    whileDrag={!isUsed ? { scale: 1.15, zIndex: 50, cursor: 'grabbing' } : undefined}
+                    onDragEnd={(e, info) => handleDragEnd(e, info, habit)}
+                    className={cn(
+                      "border rounded-xl p-2 flex flex-col items-center justify-center gap-0.5 shadow-sm touch-none text-center",
+                      isUsed ? "bg-gray-100 border-gray-200 opacity-40 cursor-not-allowed" : "bg-emerald-50 hover:bg-emerald-100 border-emerald-200 cursor-grab text-emerald-900"
+                    )}
+                  >
+                    <span className="text-xl">{habit.emoji}</span>
+                    <span className="text-[8px] font-extrabold leading-tight">{habit.name}</span>
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
         </motion.div>
       ) : (
-        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="space-y-6">
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="space-y-4">
           <div className="text-6xl my-2">💥✨</div>
           <h3 className="text-2xl font-extrabold text-emerald-600">Loop Collapsed!</h3>
 
           {/* RESTORED VIBRANT RING */}
-          <div className="relative h-48 w-full flex items-center justify-center">
+          <div className="relative h-48 w-full flex items-center justify-center mb-4">
             <div className="w-48 h-48 rounded-full border-2 border-emerald-300 bg-emerald-50/50 flex items-center justify-center relative shadow-sm">
               {currentNodes.map((node, i) => {
                 const angle = (i * 2 * Math.PI) / 5 - Math.PI / 2;
@@ -1308,22 +1351,35 @@ function LoopBreakerGame({ onComplete }: { onComplete: (score: number) => void }
                   </motion.div>
                 );
               })}
-              <div className="w-16 h-16 rounded-full bg-emerald-500 text-white flex flex-col items-center justify-center shadow-md">
-                <span className="text-2xl">{chosenHabit?.emoji}</span>
+              <div className="w-20 h-20 rounded-full bg-emerald-500 text-white flex flex-wrap gap-1 items-center justify-center shadow-md p-2">
+                {chosenHabits.map(h => <span key={h.id} className="text-xl">{h.emoji}</span>)}
               </div>
             </div>
           </div>
 
-          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-left shadow-sm">
-            <p className="font-extrabold text-xs text-emerald-900 uppercase tracking-wider mb-1">
-              How {chosenHabit?.name} Broke The Cycle:
-            </p>
-            <p className="text-xs font-medium text-emerald-800 leading-relaxed">
-              {chosenHabit?.science}
-            </p>
+          {/* SYNERGY COMBO BANNER */}
+          {comboFeedback && (
+            <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5 }} className="bg-amber-100 border-2 border-amber-300 rounded-2xl p-3 text-left shadow-sm">
+              <p className="font-extrabold text-[11px] text-amber-900 uppercase tracking-wide mb-1">{comboFeedback.title}</p>
+              <p className="text-[10px] font-bold text-amber-800 leading-tight">{comboFeedback.text}</p>
+            </motion.div>
+          )}
+
+          {/* INDIVIDUAL HABIT BREAKDOWNS */}
+          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 text-left shadow-sm max-h-32 overflow-y-auto custom-scrollbar">
+            {chosenHabits.map(habit => (
+              <div key={habit.id} className="mb-2 last:mb-0">
+                <p className="font-extrabold text-[10px] text-emerald-900 uppercase tracking-wider mb-0.5">
+                  {habit.emoji} {habit.name}:
+                </p>
+                <p className="text-[10px] font-medium text-emerald-800 leading-tight">
+                  {habit.science}
+                </p>
+              </div>
+            ))}
           </div>
 
-          <Button onClick={handleNextLevel} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">
+          <Button onClick={handleNextLevel} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white mt-2">
             {level < maxLevels ? `Advance to Level ${level + 1} 🚀` : 'Complete Game 🏆'}
           </Button>
         </motion.div>
