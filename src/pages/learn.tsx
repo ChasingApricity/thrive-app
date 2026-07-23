@@ -316,10 +316,10 @@ function MythVsFactGame({ questions, onComplete }: { questions: Question[], onCo
   );
 }
 
-// GAME 2: Cortisol Slider (UPDATED: CYCLING INHALE / EXHALE GUIDED BREATHING)
+// GAME 2: Cortisol Slider (UPDATED: 30-SECOND TIMER)
 function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => void }) {
   const [level, setLevel] = useState(40);
-  const [timeLeft, setTimeLeft] = useState(15);
+  const [timeLeft, setTimeLeft] = useState(30); // Extended to 30 seconds!
   const [status, setStatus] = useState<'playing' | 'won' | 'lost'>('playing');
   
   const [shieldActive, setShieldActive] = useState(false);
@@ -332,7 +332,6 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
   const shieldRef = React.useRef(shieldActive);
   useEffect(() => { shieldRef.current = shieldActive; }, [shieldActive]);
 
-  // Breathing cycle animation ticker when holding
   useEffect(() => {
     if (!isHolding) {
       setBreathPhase('Inhale');
@@ -340,7 +339,7 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
     }
     const cycle = setInterval(() => {
       setBreathPhase(p => (p === 'Inhale' ? 'Exhale' : 'Inhale'));
-    }, 2000); // Switches every 2 seconds for active pacing
+    }, 2000);
     return () => clearInterval(cycle);
   }, [isHolding]);
 
@@ -358,10 +357,10 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
       setLevel(l => {
         let newLevel = l;
         if (!shieldRef.current) {
-          newLevel += 12; 
+          newLevel += 10; 
         }
         if (isHoldingRef.current) {
-          newLevel -= 22; 
+          newLevel -= 20; 
         }
         if (newLevel >= 100) {
           setStatus('lost');
@@ -391,7 +390,7 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
         </h3>
         <p className="text-sm font-medium text-gray-700 mb-8">
           {status === 'won' 
-            ? "By utilizing guided Inhale/Exhale pacing and strategic hydration, you successfully buffered the stress response!" 
+            ? "By surviving the full 30-second breathing session, you successfully mastered your stress response!" 
             : "When cortisol runs wild, your brain demands fast energy (sugar). Remember to pace your breathing!"}
         </p>
         <Button onClick={() => onComplete(status === 'won' ? 4 : 0)} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">Continue</Button>
@@ -409,7 +408,6 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
         <span className={level > 75 ? "text-red-500" : ""}>{level}%</span>
       </div>
       
-      {/* Cortisol Bar */}
       <div className={cn("h-6 w-full bg-gray-200 rounded-full overflow-hidden mb-8 shadow-inner border border-gray-100 transition-all", shieldActive ? "ring-4 ring-cyan-300" : "")}>
         <motion.div 
           className="h-full" 
@@ -421,7 +419,6 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
         />
       </div>
 
-      {/* The Biofeedback Orb - Dynamic Inhale/Exhale Scaling */}
       <div className="flex justify-center mb-8 relative h-32 items-center">
         <motion.div 
           animate={{ 
@@ -1010,7 +1007,7 @@ export default function Learn() {
                         <p className="text-indigo-100 text-sm font-medium mb-5">
                           {active.GameComponent ? "Play a quick game and unlock a bonus round for up to 30 VP!" : "Test your knowledge on this topic and earn up to 10 VP!"}
                         </p>
-                        <Button onClick={startGame} className="w-full bg-white text-indigo-600 hover:bg-indigo-700 h-12 rounded-xl font-bold h-12 shadow-sm">
+                        <Button onClick={startGame} className="w-full bg-white text-indigo-600 hover:bg-gray-50 rounded-xl font-bold h-12 shadow-sm">
                           Start Mini-Game 🚀
                         </Button>
                       </div>
