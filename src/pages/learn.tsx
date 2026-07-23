@@ -316,7 +316,7 @@ function MythVsFactGame({ questions, onComplete }: { questions: Question[], onCo
   );
 }
 
-// GAME 2: Cortisol Slider (UPDATED: INTERACTIVE ORB & BUFFED SHIELD)
+// GAME 2: Cortisol Slider (UPDATED: CYCLING INHALE / EXHALE GUIDED BREATHING)
 function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => void }) {
   const [level, setLevel] = useState(40);
   const [timeLeft, setTimeLeft] = useState(15);
@@ -325,11 +325,24 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
   const [shieldActive, setShieldActive] = useState(false);
   const [waterCharges, setWaterCharges] = useState(1);
   const [isHolding, setIsHolding] = useState(false);
+  const [breathPhase, setBreathPhase] = useState<'Inhale' | 'Exhale'>('Inhale');
 
   const isHoldingRef = React.useRef(isHolding);
   useEffect(() => { isHoldingRef.current = isHolding; }, [isHolding]);
   const shieldRef = React.useRef(shieldActive);
   useEffect(() => { shieldRef.current = shieldActive; }, [shieldActive]);
+
+  // Breathing cycle animation ticker when holding
+  useEffect(() => {
+    if (!isHolding) {
+      setBreathPhase('Inhale');
+      return;
+    }
+    const cycle = setInterval(() => {
+      setBreathPhase(p => (p === 'Inhale' ? 'Exhale' : 'Inhale'));
+    }, 2000); // Switches every 2 seconds for active pacing
+    return () => clearInterval(cycle);
+  }, [isHolding]);
 
   useEffect(() => {
     if (status !== 'playing') return;
@@ -344,17 +357,12 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
 
       setLevel(l => {
         let newLevel = l;
-        
-        // Cortisol naturally spikes unless the shield is active
         if (!shieldRef.current) {
-          newLevel += 12; // Made slightly harder since breathing is stronger
+          newLevel += 12; 
         }
-        
-        // Holding the orb actively lowers it faster now
         if (isHoldingRef.current) {
           newLevel -= 22; 
         }
-
         if (newLevel >= 100) {
           setStatus('lost');
           return 100;
@@ -369,10 +377,7 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
     if (waterCharges > 0 && status === 'playing') {
       setWaterCharges(0);
       setShieldActive(true);
-      
-      // BUFF: Instantly drops cortisol by 25 points so you don't instantly lose after the shield drops!
       setLevel(l => Math.max(0, l - 25));
-      
       setTimeout(() => setShieldActive(false), 4000);
     }
   };
@@ -386,8 +391,8 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
         </h3>
         <p className="text-sm font-medium text-gray-700 mb-8">
           {status === 'won' 
-            ? "By utilizing focused breathing and strategic hydration, you successfully buffered the physical stress response!" 
-            : "When cortisol runs wild, your brain demands fast energy (sugar). Remember to use your Hydration Shield!"}
+            ? "By utilizing guided Inhale/Exhale pacing and strategic hydration, you successfully buffered the stress response!" 
+            : "When cortisol runs wild, your brain demands fast energy (sugar). Remember to pace your breathing!"}
         </p>
         <Button onClick={() => onComplete(status === 'won' ? 4 : 0)} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">Continue</Button>
       </motion.div>
@@ -397,7 +402,7 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
   return (
     <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-lg border border-white/50 text-center relative overflow-hidden select-none">
       <p className="text-xs font-bold text-orange-500 uppercase tracking-wider mb-2">Keep it chill!</p>
-      <p className="text-sm font-medium text-gray-600 mb-6">Touch and hold the orb to breathe.</p>
+      <p className="text-sm font-medium text-gray-600 mb-6">Touch and hold orb to follow Inhale/Exhale cycles.</p>
       
       <div className="flex justify-between font-bold text-gray-700 mb-2">
         <span>Cortisol Level</span>
@@ -416,11 +421,13 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
         />
       </div>
 
-      {/* The Biofeedback Orb - NOW INTERACTIVE */}
+      {/* The Biofeedback Orb - Dynamic Inhale/Exhale Scaling */}
       <div className="flex justify-center mb-8 relative h-32 items-center">
         <motion.div 
-          animate={{ scale: isHolding ? 0.85 : [1, 1.2, 1] }} 
-          transition={{ duration: isHolding ? 0.2 : 3, repeat: isHolding ? 0 : Infinity, ease: "easeInOut" }}
+          animate={{ 
+            scale: isHolding ? (breathPhase === 'Inhale' ? 1.3 : 0.85) : [1, 1.2, 1] 
+          }} 
+          transition={{ duration: isHolding ? 2 : 3, repeat: isHolding ? 0 : Infinity, ease: "easeInOut" }}
           onPointerDown={(e) => { e.preventDefault(); setIsHolding(true); }}
           onPointerUp={(e) => { e.preventDefault(); setIsHolding(false); }}
           onPointerLeave={(e) => { e.preventDefault(); setIsHolding(false); }}
@@ -428,9 +435,9 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
           className={cn("absolute w-28 h-28 rounded-full border-4 flex flex-col items-center justify-center transition-colors cursor-pointer select-none touch-none", 
             isHolding ? "bg-emerald-500 border-emerald-600 shadow-lg shadow-emerald-200" : "bg-indigo-50 border-indigo-200")}
         >
-          <span className="text-4xl mb-1">{isHolding ? '😌' : '🌬️'}</span>
+          <span className="text-3xl mb-0.5">{isHolding ? (breathPhase === 'Inhale' ? '🫁' : '😌') : '🌬️'}</span>
           <span className={cn("text-[10px] font-bold uppercase tracking-wider", isHolding ? "text-emerald-100" : "text-indigo-400")}>
-            {isHolding ? 'Exhale...' : 'Hold Orb'}
+            {isHolding ? breathPhase : 'Hold Orb'}
           </span>
         </motion.div>
       </div>
@@ -1003,7 +1010,7 @@ export default function Learn() {
                         <p className="text-indigo-100 text-sm font-medium mb-5">
                           {active.GameComponent ? "Play a quick game and unlock a bonus round for up to 30 VP!" : "Test your knowledge on this topic and earn up to 10 VP!"}
                         </p>
-                        <Button onClick={startGame} className="w-full bg-white text-indigo-600 hover:bg-gray-50 rounded-xl font-bold h-12 shadow-sm">
+                        <Button onClick={startGame} className="w-full bg-white text-indigo-600 hover:bg-indigo-700 h-12 rounded-xl font-bold h-12 shadow-sm">
                           Start Mini-Game 🚀
                         </Button>
                       </div>
@@ -1019,4 +1026,3 @@ export default function Learn() {
     </Page>
   );
 }
-
