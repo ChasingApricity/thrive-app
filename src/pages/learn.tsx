@@ -552,7 +552,6 @@ function GutHealthPlateGame({ onComplete }: { onComplete: (score: number) => voi
     const particle = { id: Date.now(), emoji: food.isGood ? '✨' : '💨' };
     setFloatingParticles([particle]);
 
-    // Smoothed out reset delay to 1000ms for a more graceful transition
     setTimeout(() => {
       setFloatingParticles([]);
       if (plate.length + 1 === 5) {
@@ -622,14 +621,13 @@ function GutHealthPlateGame({ onComplete }: { onComplete: (score: number) => voi
               visuals.shake ? { x: [-6, 6, -6, 6, 0], filter: "sepia(100%) hue-rotate(90deg)" } : 
               { y: [0, -6, 0] }
             }
-            // Smoothed out transition duration to 0.6s for a relaxed, appropriate bounce/shake
             transition={ visuals.bounce || visuals.shake ? { duration: 0.6, ease: "easeInOut" } : { duration: 2.5, repeat: Infinity, ease: "easeInOut" } }
             className={cn("w-28 h-28 rounded-full flex items-center justify-center text-6xl shadow-lg border-4 transition-colors duration-500 z-10 relative", visuals.bg)}
           >
             {visuals.emoji}
           </motion.div>
 
-          {/* Floating Particles with Smoother Drift */}
+          {/* Floating Particles */}
           <AnimatePresence>
             {floatingParticles.map(p => (
               <motion.div
@@ -863,12 +861,14 @@ function SleepGame({ onComplete }: { onComplete: (score: number) => void }) {
   );
 }
 
-// GAME 6: The Swap It Challenge
+// GAME 6: The Swap It Challenge (DRAG & DROP WITH 5 ROUNDS!)
 type SwapRound = { craving: string; cravingEmoji: string; correct: string; correctEmoji: string; wrong: string; wrongEmoji: string; explanation: string };
 const SWAP_ROUNDS: SwapRound[] = [
   { craving: "Sugary Donut", cravingEmoji: "🍩", correct: "Apple & Almonds", correctEmoji: "🍎🥜", wrong: "Energy Drink", wrongEmoji: "🥤", explanation: "Apples and almonds provide fiber and healthy fats, giving you steady energy instead of a rapid sugar crash!" },
   { craving: "Potato Chips", cravingEmoji: "🍟", correct: "Roasted Chickpeas", correctEmoji: "🥙", wrong: "Pretzels", wrongEmoji: "🥨", explanation: "Chickpeas offer protein and fiber to keep you genuinely full, whereas pretzels are just empty carbs." },
-  { craving: "Ice Cream", cravingEmoji: "🍦", correct: "Greek Yogurt & Fruit", correctEmoji: "🍨", wrong: "Candy Bar", wrongEmoji: "🍫", explanation: "Greek yogurt provides satisfying protein and natural sweetness without the massive cortisol and sugar spike." }
+  { craving: "Ice Cream", cravingEmoji: "🍦", correct: "Greek Yogurt & Fruit", correctEmoji: "🍨", wrong: "Candy Bar", wrongEmoji: "🍫", explanation: "Greek yogurt provides satisfying protein and natural sweetness without the massive cortisol and sugar spike." },
+  { craving: "Chocolate Bar", cravingEmoji: "🍫", correct: "Dark Choc & Nuts", correctEmoji: "🍫🌰", wrong: "Gummy Bears", wrongEmoji: "🍬", explanation: "Dark chocolate satisfies the craving while nuts add healthy brain fats. Gummy bears are just pure refined sugar!" },
+  { craving: "Sugary Soda", cravingEmoji: "🥤", correct: "Iced Green Tea", correctEmoji: "🍵🧊", wrong: "Processed Juice", wrongEmoji: "🧃", explanation: "Fruit juice has the fiber stripped out, spiking your blood sugar just like soda! Unsweetened green tea provides steady hydration and antioxidants." }
 ];
 
 function FoodSwapGame({ onComplete }: { onComplete: (score: number) => void }) {
@@ -876,6 +876,8 @@ function FoodSwapGame({ onComplete }: { onComplete: (score: number) => void }) {
   const [score, setScore] = useState(0);
   const [status, setStatus] = useState<'playing' | 'feedback' | 'done'>('playing');
   const [lastGuess, setLastGuess] = useState<boolean>(false);
+  
+  const dropZoneRef = useRef<HTMLDivElement>(null);
 
   const current = SWAP_ROUNDS[round];
 
@@ -883,6 +885,20 @@ function FoodSwapGame({ onComplete }: { onComplete: (score: number) => void }) {
     setLastGuess(isCorrect);
     if (isCorrect) setScore(s => s + 1);
     setStatus('feedback');
+  };
+
+  const handleDragEnd = (e: any, info: any, isCorrect: boolean) => {
+    if (!dropZoneRef.current) return;
+    const rect = dropZoneRef.current.getBoundingClientRect();
+    
+    if (
+      info.point.x >= rect.left &&
+      info.point.x <= rect.right &&
+      info.point.y >= rect.top &&
+      info.point.y <= rect.bottom
+    ) {
+      handleSwap(isCorrect);
+    }
   };
 
   const handleNext = () => {
@@ -900,9 +916,9 @@ function FoodSwapGame({ onComplete }: { onComplete: (score: number) => void }) {
         <div className="text-6xl mb-4">⚖️</div>
         <h3 className="text-2xl font-extrabold mb-2 text-indigo-700">Macros Balanced!</h3>
         <p className="text-sm font-medium text-gray-700 mb-8">
-          You made {score}/3 healthy food swaps! By choosing complex carbs, fiber, and protein over simple sugars, you keep your blood sugar steady and avoid energy crashes.
+          You made {score}/{SWAP_ROUNDS.length} healthy food swaps! By choosing complex carbs, fiber, and protein over simple sugars, you keep your blood sugar steady and avoid energy crashes.
         </p>
-        <Button onClick={() => onComplete(score > 1 ? 4 : 1)} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">Continue</Button>
+        <Button onClick={() => onComplete(score > 2 ? 4 : 1)} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">Continue</Button>
       </motion.div>
     );
   }
@@ -914,35 +930,60 @@ function FoodSwapGame({ onComplete }: { onComplete: (score: number) => void }) {
       <AnimatePresence mode="wait">
         {status === 'playing' ? (
           <motion.div key="playing" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-            <p className="text-sm font-medium text-gray-600 mb-4">Emotional craving detected! Swap it to stabilize your blood sugar:</p>
+            <p className="text-sm font-medium text-gray-600 mb-4">Drag a healthy swap into the drop zone!</p>
             
-            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6 text-center">
+            <div 
+              ref={dropZoneRef}
+              className="bg-amber-50 border-2 border-dashed border-amber-300 rounded-2xl p-6 mb-8 text-center relative"
+            >
               <span className="text-4xl block mb-2">{current.cravingEmoji}</span>
               <p className="font-bold text-amber-900 line-through decoration-amber-400 decoration-2">{current.craving}</p>
+              
+              <div className="absolute inset-0 bg-amber-200/20 rounded-2xl animate-pulse pointer-events-none" />
+              <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-amber-100 text-amber-800 text-[10px] font-bold px-3 py-1 rounded-full border border-amber-200 shadow-sm">
+                DROP ZONE
+              </span>
             </div>
             
             <div className="flex justify-between font-bold text-gray-700 mb-2">
-              <span className="text-xs">Blood Sugar Spiking! 📈</span>
+              <span className="text-xs">Physical Swap Options ⬆️</span>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <Button onClick={() => handleSwap(false)} className="bg-gray-50 hover:bg-gray-100 text-gray-800 font-bold h-24 rounded-2xl border border-gray-200 flex flex-col gap-1 shadow-sm">
+            <div className="grid grid-cols-2 gap-3 relative z-20">
+              <motion.div 
+                drag
+                dragSnapToOrigin={true}
+                dragElastic={0.2}
+                whileDrag={{ scale: 1.1, zIndex: 50, cursor: 'grabbing' }}
+                onDragEnd={(e, info) => handleDragEnd(e, info, false)}
+                className="bg-gray-50 hover:bg-gray-100 text-gray-800 font-bold h-24 rounded-2xl border border-gray-200 flex flex-col items-center justify-center gap-1 shadow-sm cursor-grab touch-none"
+              >
+                <div className="absolute top-1 right-2 text-gray-300">⠿</div>
                 <span className="text-2xl">{current.wrongEmoji}</span>
-                <span className="text-xs">{current.wrong}</span>
-              </Button>
-              <Button onClick={() => handleSwap(true)} className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold h-24 rounded-2xl border border-emerald-200 flex flex-col gap-1 shadow-sm">
+                <span className="text-xs px-1 text-center leading-tight">{current.wrong}</span>
+              </motion.div>
+
+              <motion.div 
+                drag
+                dragSnapToOrigin={true}
+                dragElastic={0.2}
+                whileDrag={{ scale: 1.1, zIndex: 50, cursor: 'grabbing' }}
+                onDragEnd={(e, info) => handleDragEnd(e, info, true)}
+                className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold h-24 rounded-2xl border border-emerald-200 flex flex-col items-center justify-center gap-1 shadow-sm cursor-grab touch-none"
+              >
+                <div className="absolute top-1 right-2 text-emerald-300">⠿</div>
                 <span className="text-2xl">{current.correctEmoji}</span>
-                <span className="text-xs whitespace-normal px-1">{current.correct}</span>
-              </Button>
+                <span className="text-xs px-1 whitespace-normal text-center leading-tight">{current.correct}</span>
+              </motion.div>
             </div>
           </motion.div>
         ) : (
           <motion.div key="feedback" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
             <div className="flex justify-center mb-4">
-              {lastCorrect ? <CheckCircle2 size={48} className="text-emerald-500" /> : <XCircle size={48} className="text-rose-500" />}
+              {lastGuess ? <CheckCircle2 size={48} className="text-emerald-500" /> : <XCircle size={48} className="text-rose-500" />}
             </div>
-            <h3 className={cn("text-xl font-extrabold mb-2", lastCorrect ? "text-emerald-600" : "text-rose-600")}>
-              {lastCorrect ? "Great Swap!" : "Sugar Crash! 📉"}
+            <h3 className={cn("text-xl font-extrabold mb-2", lastGuess ? "text-emerald-600" : "text-rose-600")}>
+              {lastGuess ? "Perfect Swap!" : "Sugar Crash! 📉"}
             </h3>
             <p className="text-sm font-medium text-gray-700 mb-8">{current.explanation}</p>
             <Button onClick={handleNext} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">
