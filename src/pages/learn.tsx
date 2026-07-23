@@ -1121,7 +1121,7 @@ function FoodSwapGame({ onComplete }: { onComplete: (score: number) => void }) {
   );
 }
 
-// GAME 7: THE LOOP BREAKER (HABIT STACKING & COMBO SYNERGY EDITION!)
+// GAME 7: THE LOOP BREAKER (ROBUST COMBO SYNERGY ENGINE)
 type LoopHabit = {
   id: string;
   name: string;
@@ -1142,14 +1142,12 @@ function LoopBreakerGame({ onComplete }: { onComplete: (score: number) => void }
   const maxLevels = 3;
   const [status, setStatus] = useState<'spinning' | 'broken' | 'done'>('spinning');
   
-  // Array to hold multiple dropped habits
   const [chosenHabits, setChosenHabits] = useState<LoopHabit[]>([]);
   const targetRef = useRef<HTMLDivElement>(null);
 
   const handleDragEnd = (e: any, info: any, habit: LoopHabit) => {
     if (!targetRef.current || status === 'broken' || status === 'done') return;
     
-    // Prevent dragging the exact same habit multiple times
     if (chosenHabits.some(h => h.id === habit.id)) return;
 
     const rect = targetRef.current.getBoundingClientRect();
@@ -1176,7 +1174,6 @@ function LoopBreakerGame({ onComplete }: { onComplete: (score: number) => void }
       const newHabits = [...chosenHabits, habit];
       setChosenHabits(newHabits);
       
-      // Level 1 needs 1 habit, Level 2 needs 2, Level 3 needs 3
       if (newHabits.length >= level) {
         setStatus('broken');
       }
@@ -1193,8 +1190,13 @@ function LoopBreakerGame({ onComplete }: { onComplete: (score: number) => void }
     }
   };
 
+  // The Robust Combo Engine!
   const checkCombos = () => {
+    if (chosenHabits.length < 2) return null;
+
     const ids = chosenHabits.map(h => h.id);
+    
+    // Explicit Pairings
     if (ids.includes('hydrate') && ids.includes('move')) {
        return { title: "🔥 Combo: The Cortisol Flush!", text: "Hydration + Movement clears stress hormones 2x faster!" };
     }
@@ -1204,7 +1206,18 @@ function LoopBreakerGame({ onComplete }: { onComplete: (score: number) => void }
     if (ids.includes('music') && ids.includes('breathe')) {
        return { title: "🔥 Combo: The Zen Master!", text: "Rhythmic entrainment + parasympathetic breathing forces your heart rate to plummet." };
     }
-    return null;
+    if (ids.includes('move') && ids.includes('music')) {
+       return { title: "🔥 Combo: The Flow State!", text: "Rhythm + Movement releases endorphins while burning off excess adrenaline." };
+    }
+    if (ids.includes('hydrate') && ids.includes('breathe')) {
+       return { title: "🔥 Combo: The Biological Reset!", text: "Oxygen + Water instantly stabilizes your baseline nervous system." };
+    }
+
+    // Universal Fallback if they select any other pair/trio
+    return { 
+      title: "🔥 Synergy Unlocked: Habit Stacking!", 
+      text: "Using multiple biological tools together compounds their effect, calming your nervous system significantly faster." 
+    };
   };
 
   const comboFeedback = checkCombos();
@@ -1227,7 +1240,6 @@ function LoopBreakerGame({ onComplete }: { onComplete: (score: number) => void }
 
   const currentNodes = status === 'broken' ? goodNodes : badNodes;
 
-  // Visual feedback: Spin slower as habits are added
   const baseSpinDuration = level === 1 ? 15 : level === 2 ? 8 : 4;
   const currentSpinDuration = baseSpinDuration + (chosenHabits.length * 4);
   
@@ -1259,7 +1271,6 @@ function LoopBreakerGame({ onComplete }: { onComplete: (score: number) => void }
           <p className="text-sm font-bold text-rose-600 mb-1">{levelTitle}</p>
           <p className="text-[11px] font-medium text-gray-600 mb-4">Stack habits in the center to slow and break the cycle!</p>
 
-          {/* SPINNING DOOM LOOP TARGET */}
           <div ref={targetRef} className="relative h-64 w-full flex items-center justify-center mb-6">
             <motion.div
               animate={{ rotate: 360 }}
@@ -1283,7 +1294,6 @@ function LoopBreakerGame({ onComplete }: { onComplete: (score: number) => void }
               })}
             </motion.div>
 
-            {/* Target Ring Overlay / Stack Display */}
             <div className="absolute w-28 h-28 rounded-full border-2 border-rose-400 border-dashed animate-pulse bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center shadow-md">
               {chosenHabits.length > 0 ? (
                 <div className="flex flex-wrap justify-center gap-1 p-2 pointer-events-none">
@@ -1298,7 +1308,6 @@ function LoopBreakerGame({ onComplete }: { onComplete: (score: number) => void }
             </div>
           </div>
 
-          {/* HABIT ARSENAL */}
           <div className="space-y-2">
             <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Your Habit Arsenal ⬇️</p>
             <div className="grid grid-cols-5 gap-1.5 relative z-20">
@@ -1330,7 +1339,6 @@ function LoopBreakerGame({ onComplete }: { onComplete: (score: number) => void }
           <div className="text-6xl my-2">💥✨</div>
           <h3 className="text-2xl font-extrabold text-emerald-600">Loop Collapsed!</h3>
 
-          {/* RESTORED VIBRANT RING */}
           <div className="relative h-48 w-full flex items-center justify-center mb-4">
             <div className="w-48 h-48 rounded-full border-2 border-emerald-300 bg-emerald-50/50 flex items-center justify-center relative shadow-sm">
               {currentNodes.map((node, i) => {
@@ -1357,7 +1365,7 @@ function LoopBreakerGame({ onComplete }: { onComplete: (score: number) => void }
             </div>
           </div>
 
-          {/* SYNERGY COMBO BANNER */}
+          {/* THE ROBUST SYNERGY COMBO BANNER */}
           {comboFeedback && (
             <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5 }} className="bg-amber-100 border-2 border-amber-300 rounded-2xl p-3 text-left shadow-sm">
               <p className="font-extrabold text-[11px] text-amber-900 uppercase tracking-wide mb-1">{comboFeedback.title}</p>
@@ -1365,7 +1373,6 @@ function LoopBreakerGame({ onComplete }: { onComplete: (score: number) => void }
             </motion.div>
           )}
 
-          {/* INDIVIDUAL HABIT BREAKDOWNS */}
           <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 text-left shadow-sm max-h-32 overflow-y-auto custom-scrollbar">
             {chosenHabits.map(habit => (
               <div key={habit.id} className="mb-2 last:mb-0">
