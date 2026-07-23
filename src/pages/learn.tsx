@@ -542,20 +542,17 @@ function GutHealthPlateGame({ onComplete }: { onComplete: (score: number) => voi
   const [floatingParticles, setFloatingParticles] = useState<{id: number, emoji: string}[]>([]);
 
   const handleTap = (food: FoodItem) => {
-    // Prevent tapping while animation is playing or game is over
     if (status !== 'playing' || plate.length >= 5 || petState !== 'idle') return;
     
-    // Calculate new health (Good = +20, Bad = -20)
     const newHealth = Math.max(0, Math.min(100, petHealth + (food.isGood ? 20 : -20)));
     setPetHealth(newHealth);
     setPlate([...plate, food]);
     setPetState(food.isGood ? 'happy' : 'sick');
     
-    // Spawn reaction particle
     const particle = { id: Date.now(), emoji: food.isGood ? '✨' : '💨' };
     setFloatingParticles([particle]);
 
-    // Reset pet animation after 800ms
+    // Smoothed out reset delay to 1000ms for a more graceful transition
     setTimeout(() => {
       setFloatingParticles([]);
       if (plate.length + 1 === 5) {
@@ -563,10 +560,10 @@ function GutHealthPlateGame({ onComplete }: { onComplete: (score: number) => voi
       } else {
         setPetState('idle');
       }
-    }, 800);
+    }, 1000);
   };
 
-  const isWon = petHealth >= 70; // 70+ HP means they fed it mostly good food
+  const isWon = petHealth >= 70; 
 
   const getPetVisuals = () => {
     if (status === 'done') return isWon ? { emoji: '🥰', bg: 'bg-emerald-400 border-emerald-200', bounce: true } : { emoji: '🤒', bg: 'bg-rose-400 border-rose-200', shake: true };
@@ -583,7 +580,6 @@ function GutHealthPlateGame({ onComplete }: { onComplete: (score: number) => voi
     return (
       <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white/90 backdrop-blur-md rounded-3xl p-6 text-center shadow-lg border border-white/50">
         
-        {/* End Game Mascot */}
         <div className="flex justify-center mb-4">
           <div className={cn("w-24 h-24 rounded-full flex items-center justify-center text-6xl shadow-md border-4", visuals.bg)}>
             {visuals.emoji}
@@ -594,7 +590,6 @@ function GutHealthPlateGame({ onComplete }: { onComplete: (score: number) => voi
           {isWon ? "Gubby is Thriving! ✨" : "Gubby is Starving! 📉"}
         </h3>
         
-        {/* Educational Breakdown */}
         <div className="space-y-2 mb-6 text-left h-56 overflow-y-auto pr-2 custom-scrollbar">
           {plate.map((food, i) => (
             <div key={i} className="flex gap-3 items-start bg-white p-3 rounded-xl shadow-sm border border-gray-100">
@@ -623,25 +618,26 @@ function GutHealthPlateGame({ onComplete }: { onComplete: (score: number) => voi
         <div className="relative">
           <motion.div 
             animate={
-              visuals.bounce ? { y: [0, -15, 0], scale: [1, 1.1, 1] } : 
-              visuals.shake ? { x: [-5, 5, -5, 5, 0], filter: "sepia(100%) hue-rotate(90deg)" } : 
-              { y: [0, -5, 0] }
+              visuals.bounce ? { y: [0, -18, 0], scale: [1, 1.12, 1] } : 
+              visuals.shake ? { x: [-6, 6, -6, 6, 0], filter: "sepia(100%) hue-rotate(90deg)" } : 
+              { y: [0, -6, 0] }
             }
-            transition={ visuals.bounce || visuals.shake ? { duration: 0.4 } : { duration: 2, repeat: Infinity } }
-            className={cn("w-28 h-28 rounded-full flex items-center justify-center text-6xl shadow-lg border-4 transition-colors duration-300 z-10 relative", visuals.bg)}
+            // Smoothed out transition duration to 0.6s for a relaxed, appropriate bounce/shake
+            transition={ visuals.bounce || visuals.shake ? { duration: 0.6, ease: "easeInOut" } : { duration: 2.5, repeat: Infinity, ease: "easeInOut" } }
+            className={cn("w-28 h-28 rounded-full flex items-center justify-center text-6xl shadow-lg border-4 transition-colors duration-500 z-10 relative", visuals.bg)}
           >
             {visuals.emoji}
           </motion.div>
 
-          {/* Floating Particles */}
+          {/* Floating Particles with Smoother Drift */}
           <AnimatePresence>
             {floatingParticles.map(p => (
               <motion.div
                 key={p.id}
-                initial={{ opacity: 1, y: 0, scale: 0.5 }}
-                animate={{ opacity: 0, y: -40, scale: 1.5 }}
+                initial={{ opacity: 1, y: 0, scale: 0.4 }}
+                animate={{ opacity: 0, y: -50, scale: 1.4 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.8 }}
+                transition={{ duration: 1.2, ease: "easeOut" }}
                 className="absolute top-0 right-0 z-20 text-3xl pointer-events-none"
               >
                 {p.emoji}
@@ -663,13 +659,13 @@ function GutHealthPlateGame({ onComplete }: { onComplete: (score: number) => voi
                 width: `${petHealth}%`, 
                 backgroundColor: petHealth > 70 ? "#34D399" : petHealth >= 30 ? "#FBBF24" : "#EF4444" 
               }} 
-              transition={{ type: "spring", stiffness: 100 }} 
+              transition={{ type: "spring", stiffness: 80, damping: 15 }} 
             />
           </div>
         </div>
       </div>
 
-      {/* The Feeding History (Replaces dashed plate circles) */}
+      {/* The Feeding History */}
       <div className="flex justify-center gap-2 mb-6 h-10">
         {[0, 1, 2, 3, 4].map(i => (
           <div key={i} className="w-10 h-10 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center text-xl shadow-inner">
@@ -679,7 +675,7 @@ function GutHealthPlateGame({ onComplete }: { onComplete: (score: number) => voi
       </div>
       
       {/* Food Selection Grid */}
-      <div className={cn("grid grid-cols-4 gap-2 mb-2 transition-opacity", petState !== 'idle' ? "opacity-50 pointer-events-none" : "opacity-100")}>
+      <div className={cn("grid grid-cols-4 gap-2 mb-2 transition-opacity duration-300", petState !== 'idle' ? "opacity-50 pointer-events-none" : "opacity-100")}>
         {GUT_FOODS.map(food => (
           <motion.button key={food.id} whileTap={{ scale: 0.9 }} onClick={() => handleTap(food)} className="flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 p-2 rounded-xl border border-gray-100 shadow-sm">
             <span className="text-3xl mb-1">{food.emoji}</span>
@@ -943,10 +939,10 @@ function FoodSwapGame({ onComplete }: { onComplete: (score: number) => void }) {
         ) : (
           <motion.div key="feedback" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
             <div className="flex justify-center mb-4">
-              {lastGuess ? <CheckCircle2 size={48} className="text-emerald-500" /> : <XCircle size={48} className="text-rose-500" />}
+              {lastCorrect ? <CheckCircle2 size={48} className="text-emerald-500" /> : <XCircle size={48} className="text-rose-500" />}
             </div>
-            <h3 className={cn("text-xl font-extrabold mb-2", lastGuess ? "text-emerald-600" : "text-rose-600")}>
-              {lastGuess ? "Great Swap!" : "Sugar Crash! 📉"}
+            <h3 className={cn("text-xl font-extrabold mb-2", lastCorrect ? "text-emerald-600" : "text-rose-600")}>
+              {lastCorrect ? "Great Swap!" : "Sugar Crash! 📉"}
             </h3>
             <p className="text-sm font-medium text-gray-700 mb-8">{current.explanation}</p>
             <Button onClick={handleNext} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">
