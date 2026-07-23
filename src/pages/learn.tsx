@@ -316,7 +316,7 @@ function MythVsFactGame({ questions, onComplete }: { questions: Question[], onCo
   );
 }
 
-// GAME 2: Cortisol Slider (THE ZEN EDITION)
+// GAME 2: Cortisol Slider
 function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => void }) {
   const [level, setLevel] = useState(40);
   const [timeLeft, setTimeLeft] = useState(50); 
@@ -515,7 +515,7 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
   );
 }
 
-// GAME 3: Build-a-Plate (THE TAMAGOTCHI PET EDITION!)
+// GAME 3: Build-a-Plate
 type FoodItem = { id: number; name: string; emoji: string; isGood: boolean; explanation: string; };
 const GUT_FOODS: FoodItem[] = [
   { id: 1, name: 'Oats', emoji: '🥣', isGood: true, explanation: 'Rich in beta-glucan fiber, feeding good bacteria.' },
@@ -535,9 +535,7 @@ const GUT_FOODS: FoodItem[] = [
 function GutHealthPlateGame({ onComplete }: { onComplete: (score: number) => void }) {
   const [plate, setPlate] = useState<FoodItem[]>([]);
   const [status, setStatus] = useState<'playing' | 'done'>('playing');
-  
-  // Tamagotchi State
-  const [petHealth, setPetHealth] = useState(50); // Starts at 50%
+  const [petHealth, setPetHealth] = useState(50);
   const [petState, setPetState] = useState<'idle' | 'happy' | 'sick'>('idle');
   const [floatingParticles, setFloatingParticles] = useState<{id: number, emoji: string}[]>([]);
 
@@ -578,17 +576,14 @@ function GutHealthPlateGame({ onComplete }: { onComplete: (score: number) => voi
   if (status === 'done') {
     return (
       <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white/90 backdrop-blur-md rounded-3xl p-6 text-center shadow-lg border border-white/50">
-        
         <div className="flex justify-center mb-4">
           <div className={cn("w-24 h-24 rounded-full flex items-center justify-center text-6xl shadow-md border-4", visuals.bg)}>
             {visuals.emoji}
           </div>
         </div>
-
         <h3 className={cn("text-2xl font-extrabold mb-4", isWon ? "text-emerald-600" : "text-rose-600")}>
           {isWon ? "Gubby is Thriving! ✨" : "Gubby is Starving! 📉"}
         </h3>
-        
         <div className="space-y-2 mb-6 text-left h-56 overflow-y-auto pr-2 custom-scrollbar">
           {plate.map((food, i) => (
             <div key={i} className="flex gap-3 items-start bg-white p-3 rounded-xl shadow-sm border border-gray-100">
@@ -612,7 +607,6 @@ function GutHealthPlateGame({ onComplete }: { onComplete: (score: number) => voi
       <p className="text-xs font-bold text-green-600 uppercase tracking-wider mb-2">Feed Your Microbiome</p>
       <p className="text-sm font-medium text-gray-600 mb-6">Keep Gubby in the green by picking 5 foods!</p>
       
-      {/* THE PET STAGE */}
       <div className="flex flex-col items-center justify-center mb-6 relative">
         <div className="relative">
           <motion.div 
@@ -626,8 +620,6 @@ function GutHealthPlateGame({ onComplete }: { onComplete: (score: number) => voi
           >
             {visuals.emoji}
           </motion.div>
-
-          {/* Floating Particles */}
           <AnimatePresence>
             {floatingParticles.map(p => (
               <motion.div
@@ -643,8 +635,6 @@ function GutHealthPlateGame({ onComplete }: { onComplete: (score: number) => voi
             ))}
           </AnimatePresence>
         </div>
-
-        {/* Health Bar */}
         <div className="w-full max-w-[200px] mt-4">
           <div className="flex justify-between text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
             <span>HP</span>
@@ -662,8 +652,6 @@ function GutHealthPlateGame({ onComplete }: { onComplete: (score: number) => voi
           </div>
         </div>
       </div>
-
-      {/* The Feeding History */}
       <div className="flex justify-center gap-2 mb-6 h-10">
         {[0, 1, 2, 3, 4].map(i => (
           <div key={i} className="w-10 h-10 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center text-xl shadow-inner">
@@ -671,8 +659,6 @@ function GutHealthPlateGame({ onComplete }: { onComplete: (score: number) => voi
           </div>
         ))}
       </div>
-      
-      {/* Food Selection Grid */}
       <div className={cn("grid grid-cols-4 gap-2 mb-2 transition-opacity duration-300", petState !== 'idle' ? "opacity-50 pointer-events-none" : "opacity-100")}>
         {GUT_FOODS.map(food => (
           <motion.button key={food.id} whileTap={{ scale: 0.9 }} onClick={() => handleTap(food)} className="flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 p-2 rounded-xl border border-gray-100 shadow-sm">
@@ -732,13 +718,11 @@ function HydrationGame({ onComplete }: { onComplete: (score: number) => void }) 
   return (
     <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-lg border border-white/50 text-center relative overflow-hidden">
       <p className="text-xs font-bold text-cyan-600 uppercase tracking-wider mb-2">Hydration Hero</p>
-      
       <AnimatePresence mode="wait">
         {status === 'playing' ? (
           <motion.div key="playing" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
             <span className="text-5xl block mb-4">{current.icon}</span>
             <h3 className="text-lg font-bold text-gray-800 mb-6">{current.prompt}</h3>
-            
             <div className="space-y-3">
               <Button onClick={() => handleChoice(true)} className="w-full bg-cyan-100 hover:bg-cyan-200 text-cyan-900 font-bold h-14 rounded-2xl shadow-sm border border-cyan-200">
                 {current.goodAction}
@@ -763,7 +747,6 @@ function HydrationGame({ onComplete }: { onComplete: (score: number) => void }) 
           </motion.div>
         )}
       </AnimatePresence>
-
       <div className="mt-6 flex justify-center gap-1">
         {HYDRATION_ROUNDS.map((_, i) => (
           <div key={i} className={cn("h-1.5 rounded-full transition-all", i <= round ? "w-4 bg-cyan-500" : "w-1.5 bg-gray-200")} />
@@ -773,95 +756,156 @@ function HydrationGame({ onComplete }: { onComplete: (score: number) => void }) 
   );
 }
 
-// GAME 5: Sleep Hygiene Builder
-type SleepHabit = { id: number; name: string; emoji: string; isDeepSleep: boolean; tip: string; };
-const SLEEP_HABITS: SleepHabit[] = [
-  { id: 1, name: 'Magnesium', emoji: '💊', isDeepSleep: true, tip: 'Relaxes nervous system and promotes deep slow-wave sleep.' },
-  { id: 2, name: 'Cool Room (18°C)', emoji: '❄️', isDeepSleep: true, tip: 'Signals your core body temperature to drop for restorative sleep.' },
-  { id: 3, name: 'Reading a Book', emoji: '📖', isDeepSleep: true, tip: 'Reduces cortisol and transitions your brain waves into relaxation.' },
-  { id: 4, name: 'Screen in Bed', emoji: '📱', isDeepSleep: false, tip: 'Blue light blocks melatonin production, delaying deep sleep cycles.' },
-  { id: 5, name: 'Late Heavy Meal', emoji: '🍔', isDeepSleep: false, tip: 'Forces your gut to work overtime, elevating heart rate and ruining REM.' },
-  { id: 6, name: 'Midnight Coffee', emoji: '☕', isDeepSleep: false, tip: 'Caffeine has a 6-hour half-life that completely blocks sleep architecture.' },
+// GAME 5: CIRCADIAN CLOCK BUILDER (NEW!)
+type CircadianHabit = { id: string; name: string; emoji: string; minTime: number; maxTime: number; idealDisplay: string; success: string; fail: string; };
+const CIRCADIAN_HABITS: CircadianHabit[] = [
+  { id: 'sun', name: 'Morning Sunlight', emoji: '☀️', minTime: 6, maxTime: 9, idealDisplay: "6:00 AM - 9:00 AM", success: "Perfect! Morning light triggers cortisol, clearing sleep inertia and starting a 14-hour timer for your evening melatonin.", fail: "Too late! You missed the optimal window to set your circadian clock." },
+  { id: 'coffee', name: 'Last Coffee', emoji: '☕', minTime: 11, maxTime: 14.5, idealDisplay: "Before 2:30 PM", success: "Great! This gives your body 8+ hours to clear the caffeine before bed.", fail: "Too late! Caffeine has a 6-to-8 hour half-life and will severely disrupt your deep sleep cycles." },
+  { id: 'screens', name: 'Screens Off', emoji: '📱', minTime: 20, maxTime: 22, idealDisplay: "8:00 PM - 10:00 PM", success: "Excellent. Removing blue light allows your pineal gland to finally start releasing melatonin.", fail: "Blue light at this hour suppresses melatonin production, tricking your brain into thinking it's still daytime!" },
+  { id: 'sleep', name: 'Consistent Bedtime', emoji: '😴', minTime: 21.5, maxTime: 23.5, idealDisplay: "9:30 PM - 11:30 PM", success: "Ideal! Going to bed at the same time anchors your internal clock and aligns with your natural core temperature drop.", fail: "A bit off-schedule! Consistency is the secret weapon for repairing your internal clock." }
 ];
 
-function SleepGame({ onComplete }: { onComplete: (score: number) => void }) {
-  const [selected, setSelected] = useState<SleepHabit[]>([]);
-  const [status, setStatus] = useState<'playing' | 'done'>('playing');
+function CircadianClockGame({ onComplete }: { onComplete: (score: number) => void }) {
+  const [round, setRound] = useState(0);
+  const [time, setTime] = useState(12); // Start at 12:00 PM
+  const [score, setScore] = useState(0);
+  const [status, setStatus] = useState<'playing' | 'feedback' | 'done'>('playing');
+  const [lastCorrect, setLastCorrect] = useState(false);
 
-  const toggleHabit = (habit: SleepHabit) => {
-    if (status === 'playing') {
-      if (selected.some(h => h.id === habit.id)) {
-        setSelected(selected.filter(h => h.id !== habit.id));
-      } else if (selected.length < 3) {
-        setSelected([...selected, habit]);
-      }
+  const current = CIRCADIAN_HABITS[round];
+
+  const formatTime = (t: number) => {
+    const h = Math.floor(t);
+    const m = t % 1 === 0.5 ? '30' : '00';
+    const period = h >= 12 && h < 24 ? 'PM' : 'AM';
+    const displayH = h > 12 ? h - 12 : (h === 24 ? 12 : h);
+    return `${displayH}:${m} ${period}`;
+  };
+
+  const getSkyColor = (t: number) => {
+    if (t >= 6 && t < 8.5) return "from-orange-300 to-blue-400"; // Sunrise
+    if (t >= 8.5 && t < 16) return "from-sky-400 to-blue-300"; // Day
+    if (t >= 16 && t < 19.5) return "from-indigo-400 to-orange-400"; // Sunset
+    return "from-slate-900 to-indigo-900"; // Night
+  };
+
+  const getSunMoonProps = (t: number) => {
+    const isNight = t < 6 || t >= 19.5;
+    const emoji = isNight ? '🌙' : '☀️';
+    // Calculate position across the sky arc (left to right)
+    let percent = 0;
+    if (!isNight) {
+      percent = ((t - 6) / 13.5) * 100; // Day arc from 6 to 19.5
+    } else {
+      // Night arc from 19.5 to 24 (and wraps to 6, but slider is 6-24 so just 19.5-24)
+      percent = ((t - 19.5) / 4.5) * 100; 
+    }
+    return { emoji, percent: Math.min(Math.max(percent, 5), 95) }; // Keep in bounds
+  };
+
+  const handleLockTime = () => {
+    const isCorrect = time >= current.minTime && time <= current.maxTime;
+    setLastCorrect(isCorrect);
+    if (isCorrect) setScore(s => s + 1);
+    setStatus('feedback');
+  };
+
+  const handleNext = () => {
+    if (round < CIRCADIAN_HABITS.length - 1) {
+      setRound(r => r + 1);
+      setTime(12); // Reset slider
+      setStatus('playing');
+    } else {
+      setStatus('done');
     }
   };
 
-  const correctCount = selected.filter(h => h.isDeepSleep).length;
-  const isWon = correctCount >= 2;
-
   if (status === 'done') {
     return (
-      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white/90 backdrop-blur-md rounded-3xl p-6 text-center shadow-lg border border-white/50">
-        <h3 className={cn("text-2xl font-extrabold mb-4", isWon ? "text-indigo-600" : "text-rose-600")}>
-          {isWon ? "Restorative Sleep Secured! 😴" : "Sleep Architecture Wrecked! 📉"}
-        </h3>
-        <div className="space-y-2 mb-6 text-left h-56 overflow-y-auto pr-2 custom-scrollbar">
-          {selected.map((habit, i) => (
-            <div key={i} className="flex gap-3 items-start bg-white p-3 rounded-xl shadow-sm border border-gray-100">
-              <div className="text-2xl bg-gray-50 rounded-full w-10 h-10 flex items-center justify-center shrink-0">{habit.emoji}</div>
-              <div>
-                <p className="font-bold text-sm text-gray-800 flex items-center gap-1">
-                  {habit.name} {habit.isDeepSleep ? <span className="text-emerald-500">✅</span> : <span className="text-rose-500">❌</span>}
-                </p>
-                <p className="text-xs text-gray-500 mt-1 leading-snug">{habit.tip}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-        <Button onClick={() => onComplete(isWon ? 4 : 0)} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">Continue</Button>
+      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white/90 backdrop-blur-md rounded-3xl p-8 text-center shadow-lg border border-white/50">
+        <div className="text-6xl mb-4">⏱️</div>
+        <h3 className="text-2xl font-extrabold mb-2 text-indigo-800">Master of Time!</h3>
+        <p className="text-sm font-medium text-gray-700 mb-8">
+          You scheduled {score}/4 habits correctly. You now understand that sleep hygiene isn't just about what you do in bed—it's a 24-hour cycle that starts the minute you wake up!
+        </p>
+        <Button onClick={() => onComplete(score >= 3 ? 4 : 1)} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">Continue</Button>
       </motion.div>
     );
   }
 
-  return (
-    <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-lg border border-white/50 text-center relative">
-      <p className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2">Sleep Hygiene Builder</p>
-      <p className="text-sm font-medium text-gray-600 mb-6">Select your 3 bedtime habits tonight:</p>
-      
-      <div className="grid grid-cols-2 gap-2 mb-6">
-        {SLEEP_HABITS.map(habit => {
-          const isSelected = selected.some(h => h.id === habit.id);
-          return (
-            <motion.button 
-              key={habit.id}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => toggleHabit(habit)}
-              className={cn(
-                "p-3 rounded-2xl border text-left flex items-center gap-3 transition-all shadow-sm",
-                isSelected ? "bg-indigo-50 border-indigo-500 ring-2 ring-indigo-200" : "bg-gray-50 border-gray-100"
-              )}
-            >
-              <span className="text-2xl">{habit.emoji}</span>
-              <span className="text-xs font-bold text-gray-700 leading-tight">{habit.name}</span>
-            </motion.button>
-          );
-        })}
-      </div>
+  const skyVisuals = getSunMoonProps(time);
 
-      <Button 
-        disabled={selected.length < 3}
-        onClick={() => setStatus('done')} 
-        className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white disabled:opacity-50"
-      >
-        Lock In Routine ({selected.length}/3)
-      </Button>
+  return (
+    <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-lg border border-white/50 text-center relative overflow-hidden">
+      <p className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2">Circadian Builder</p>
+      
+      <AnimatePresence mode="wait">
+        {status === 'playing' ? (
+          <motion.div key="playing" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+            <p className="text-sm font-bold text-gray-800 mb-4">When should you schedule:</p>
+            <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-3 mb-6 flex items-center justify-center gap-2 shadow-sm">
+              <span className="text-2xl">{current.emoji}</span>
+              <span className="font-extrabold text-indigo-900">{current.name}</span>
+            </div>
+            
+            {/* The Interactive Sky Window */}
+            <div className={cn("relative w-full h-32 rounded-2xl mb-6 overflow-hidden transition-all duration-500 bg-gradient-to-b border border-black/5 shadow-inner", getSkyColor(time))}>
+              {/* Sun / Moon */}
+              <div 
+                className="absolute text-4xl transition-all duration-200"
+                style={{ left: `${skyVisuals.percent}%`, bottom: '20%', transform: 'translateX(-50%)' }}
+              >
+                {skyVisuals.emoji}
+              </div>
+              {/* Ground Silhouette */}
+              <div className="absolute bottom-0 w-full h-1/4 bg-black/20" />
+            </div>
+            
+            {/* Time Readout */}
+            <div className="text-3xl font-extrabold text-gray-900 mb-4 tracking-tight">
+              {formatTime(time)}
+            </div>
+
+            {/* Range Slider */}
+            <input 
+              type="range" 
+              min="6" max="24" step="0.5" 
+              value={time} 
+              onChange={(e) => setTime(parseFloat(e.target.value))}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600 mb-6"
+            />
+
+            <Button onClick={handleLockTime} className="w-full bg-indigo-600 hover:bg-indigo-700 h-14 rounded-2xl text-white font-bold text-lg shadow-sm">
+              Lock Time ⏱️
+            </Button>
+            <p className="text-[10px] text-gray-400 mt-3 font-medium uppercase tracking-wider">Drag slider to adjust sky</p>
+          </motion.div>
+        ) : (
+          <motion.div key="feedback" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+            <div className="flex justify-center mb-4">
+              {lastCorrect ? <CheckCircle2 size={48} className="text-emerald-500" /> : <XCircle size={48} className="text-rose-500" />}
+            </div>
+            <h3 className={cn("text-xl font-extrabold mb-2", lastCorrect ? "text-emerald-600" : "text-rose-600")}>
+              {lastCorrect ? "Perfect Timing!" : "Out of Sync!"}
+            </h3>
+            <p className="text-sm font-bold text-gray-800 mb-2">Ideal Window: {current.idealDisplay}</p>
+            <p className="text-sm font-medium text-gray-700 mb-8">{current.explanation}</p>
+            <Button onClick={handleNext} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">
+              {round < CIRCADIAN_HABITS.length - 1 ? 'Next Habit' : 'Finish Clock'}
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <div className="mt-6 flex justify-center gap-1">
+        {CIRCADIAN_HABITS.map((_, i) => (
+          <div key={i} className={cn("h-1.5 rounded-full transition-all", i <= round ? "w-4 bg-indigo-500" : "w-1.5 bg-gray-200")} />
+        ))}
+      </div>
     </div>
   );
 }
 
-// GAME 6: The Swap It Challenge (THE FLAWLESS PHYSICS EDITION)
+// GAME 6: The Swap It Challenge
 type SwapRound = { craving: string; cravingEmoji: string; correct: string; correctEmoji: string; wrong: string; wrongEmoji: string; explanation: string };
 const SWAP_ROUNDS: SwapRound[] = [
   { craving: "Sugary Donut", cravingEmoji: "🍩", correct: "Apple & Almonds", correctEmoji: "🍎🥜", wrong: "Energy Drink", wrongEmoji: "🥤", explanation: "Apples and almonds provide fiber and healthy fats, giving you steady energy instead of a rapid sugar crash!" },
@@ -891,7 +935,6 @@ function FoodSwapGame({ onComplete }: { onComplete: (score: number) => void }) {
     if (!dropZoneRef.current) return;
     const rect = dropZoneRef.current.getBoundingClientRect();
     
-    // Safety check to ensure we get reliable viewport coordinates regardless of device or scroll depth
     let clientX = info.point.x;
     let clientY = info.point.y;
 
@@ -903,7 +946,6 @@ function FoodSwapGame({ onComplete }: { onComplete: (score: number) => void }) {
       clientY = e.clientY;
     }
 
-    // 50px buffer makes the drop zone massive and forgiving for thumbs!
     const buffer = 50;
 
     if (
@@ -1050,7 +1092,7 @@ const articles = [
   {
     id: 4, emoji: '😴', title: 'Why sleep is the secret weapon', color: 'bg-indigo-50 text-indigo-900',
     takeaway: "8–9 hours isn't optional. It's when your body fixes everything else.", Chart: SleepFlow,
-    GameComponent: SleepGame, 
+    GameComponent: CircadianClockGame, 
     questions: [
       { text: "You can 'catch up' on missed sleep during the weekend.", isFact: false, explanation: "Binge-sleeping doesn't undo the metabolic damage of sleep deprivation during the week." },
       { text: "Lack of sleep increases your hunger hormones.", isFact: true, explanation: "Poor sleep spikes ghrelin (hunger) and lowers leptin (fullness)." }
