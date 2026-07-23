@@ -718,11 +718,13 @@ function HydrationGame({ onComplete }: { onComplete: (score: number) => void }) 
   return (
     <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-lg border border-white/50 text-center relative overflow-hidden">
       <p className="text-xs font-bold text-cyan-600 uppercase tracking-wider mb-2">Hydration Hero</p>
+      
       <AnimatePresence mode="wait">
         {status === 'playing' ? (
           <motion.div key="playing" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
             <span className="text-5xl block mb-4">{current.icon}</span>
             <h3 className="text-lg font-bold text-gray-800 mb-6">{current.prompt}</h3>
+            
             <div className="space-y-3">
               <Button onClick={() => handleChoice(true)} className="w-full bg-cyan-100 hover:bg-cyan-200 text-cyan-900 font-bold h-14 rounded-2xl shadow-sm border border-cyan-200">
                 {current.goodAction}
@@ -747,6 +749,7 @@ function HydrationGame({ onComplete }: { onComplete: (score: number) => void }) 
           </motion.div>
         )}
       </AnimatePresence>
+
       <div className="mt-6 flex justify-center gap-1">
         {HYDRATION_ROUNDS.map((_, i) => (
           <div key={i} className={cn("h-1.5 rounded-full transition-all", i <= round ? "w-4 bg-cyan-500" : "w-1.5 bg-gray-200")} />
@@ -756,18 +759,19 @@ function HydrationGame({ onComplete }: { onComplete: (score: number) => void }) 
   );
 }
 
-// GAME 5: CIRCADIAN CLOCK BUILDER (NEW!)
+// GAME 5: CIRCADIAN CLOCK BUILDER (TEEN EDITION!)
 type CircadianHabit = { id: string; name: string; emoji: string; minTime: number; maxTime: number; idealDisplay: string; success: string; fail: string; };
 const CIRCADIAN_HABITS: CircadianHabit[] = [
-  { id: 'sun', name: 'Morning Sunlight', emoji: '☀️', minTime: 6, maxTime: 9, idealDisplay: "6:00 AM - 9:00 AM", success: "Perfect! Morning light triggers cortisol, clearing sleep inertia and starting a 14-hour timer for your evening melatonin.", fail: "Too late! You missed the optimal window to set your circadian clock." },
-  { id: 'coffee', name: 'Last Coffee', emoji: '☕', minTime: 11, maxTime: 14.5, idealDisplay: "Before 2:30 PM", success: "Great! This gives your body 8+ hours to clear the caffeine before bed.", fail: "Too late! Caffeine has a 6-to-8 hour half-life and will severely disrupt your deep sleep cycles." },
-  { id: 'screens', name: 'Screens Off', emoji: '📱', minTime: 20, maxTime: 22, idealDisplay: "8:00 PM - 10:00 PM", success: "Excellent. Removing blue light allows your pineal gland to finally start releasing melatonin.", fail: "Blue light at this hour suppresses melatonin production, tricking your brain into thinking it's still daytime!" },
-  { id: 'sleep', name: 'Consistent Bedtime', emoji: '😴', minTime: 21.5, maxTime: 23.5, idealDisplay: "9:30 PM - 11:30 PM", success: "Ideal! Going to bed at the same time anchors your internal clock and aligns with your natural core temperature drop.", fail: "A bit off-schedule! Consistency is the secret weapon for repairing your internal clock." }
+  { id: 'sun', name: 'Morning Sunlight', emoji: '☀️', minTime: 6.5, maxTime: 9.5, idealDisplay: "6:30 AM - 9:30 AM", success: "Perfect! Morning light triggers cortisol, waking up your teen brain and starting the countdown for evening melatonin.", fail: "Too late! Missing morning light makes it much harder to wake up for school and shifts your body clock even later." },
+  { id: 'coffee', name: 'Last Caffeine/Energy Drink', emoji: '🥤', minTime: 12, maxTime: 15, idealDisplay: "Before 3:00 PM", success: "Great! This gives your body enough time to clear out the caffeine before you try to sleep.", fail: "Too late! Energy drinks and iced coffees have a 6-8 hour half-life. Drinking them late destroys your deep sleep." },
+  { id: 'meal', name: 'Last Heavy Meal', emoji: '🍔', minTime: 18, maxTime: 20.5, idealDisplay: "6:00 PM - 8:30 PM", success: "Nice! Giving your stomach 2-3 hours to digest means your core temperature can drop, which is required for sleep.", fail: "Eating a heavy meal right before bed forces your gut to work overtime, raising your heart rate and ruining your sleep quality!" },
+  { id: 'screens', name: 'Screens Dimmed/Off', emoji: '📱', minTime: 21, maxTime: 22.5, idealDisplay: "9:00 PM - 10:30 PM", success: "Excellent. Giving your eyes a break from TikTok/Instagram blue light allows your brain to finally release melatonin.", fail: "Blue light at this hour tricks your brain into thinking the sun is still up, completely blocking your sleep hormones!" },
+  { id: 'sleep', name: 'Consistent Bedtime', emoji: '😴', minTime: 21.5, maxTime: 23.5, idealDisplay: "9:30 PM - 11:30 PM", success: "Ideal! Going to bed at the same time anchors your internal clock. Consistency makes waking up way less painful.", fail: "A bit off-schedule! Teen body clocks naturally want to stay up late, but consistency is the only way to not feel exhausted." }
 ];
 
 function CircadianClockGame({ onComplete }: { onComplete: (score: number) => void }) {
   const [round, setRound] = useState(0);
-  const [time, setTime] = useState(12); // Start at 12:00 PM
+  const [time, setTime] = useState(12); 
   const [score, setScore] = useState(0);
   const [status, setStatus] = useState<'playing' | 'feedback' | 'done'>('playing');
   const [lastCorrect, setLastCorrect] = useState(false);
@@ -792,15 +796,13 @@ function CircadianClockGame({ onComplete }: { onComplete: (score: number) => voi
   const getSunMoonProps = (t: number) => {
     const isNight = t < 6 || t >= 19.5;
     const emoji = isNight ? '🌙' : '☀️';
-    // Calculate position across the sky arc (left to right)
     let percent = 0;
     if (!isNight) {
-      percent = ((t - 6) / 13.5) * 100; // Day arc from 6 to 19.5
+      percent = ((t - 6) / 13.5) * 100; 
     } else {
-      // Night arc from 19.5 to 24 (and wraps to 6, but slider is 6-24 so just 19.5-24)
       percent = ((t - 19.5) / 4.5) * 100; 
     }
-    return { emoji, percent: Math.min(Math.max(percent, 5), 95) }; // Keep in bounds
+    return { emoji, percent: Math.min(Math.max(percent, 5), 95) }; 
   };
 
   const handleLockTime = () => {
@@ -813,7 +815,7 @@ function CircadianClockGame({ onComplete }: { onComplete: (score: number) => voi
   const handleNext = () => {
     if (round < CIRCADIAN_HABITS.length - 1) {
       setRound(r => r + 1);
-      setTime(12); // Reset slider
+      setTime(12); 
       setStatus('playing');
     } else {
       setStatus('done');
@@ -826,9 +828,9 @@ function CircadianClockGame({ onComplete }: { onComplete: (score: number) => voi
         <div className="text-6xl mb-4">⏱️</div>
         <h3 className="text-2xl font-extrabold mb-2 text-indigo-800">Master of Time!</h3>
         <p className="text-sm font-medium text-gray-700 mb-8">
-          You scheduled {score}/4 habits correctly. You now understand that sleep hygiene isn't just about what you do in bed—it's a 24-hour cycle that starts the minute you wake up!
+          You scheduled {score}/5 habits correctly. You now understand that sleep hygiene isn't just about what you do in bed—it's a 24-hour cycle that starts the minute you wake up!
         </p>
-        <Button onClick={() => onComplete(score >= 3 ? 4 : 1)} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">Continue</Button>
+        <Button onClick={() => onComplete(score >= 4 ? 4 : 1)} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">Continue</Button>
       </motion.div>
     );
   }
@@ -905,7 +907,7 @@ function CircadianClockGame({ onComplete }: { onComplete: (score: number) => voi
   );
 }
 
-// GAME 6: The Swap It Challenge
+// GAME 6: The Swap It Challenge (DRAG & DROP WITH 5 ROUNDS!)
 type SwapRound = { craving: string; cravingEmoji: string; correct: string; correctEmoji: string; wrong: string; wrongEmoji: string; explanation: string };
 const SWAP_ROUNDS: SwapRound[] = [
   { craving: "Sugary Donut", cravingEmoji: "🍩", correct: "Apple & Almonds", correctEmoji: "🍎🥜", wrong: "Energy Drink", wrongEmoji: "🥤", explanation: "Apples and almonds provide fiber and healthy fats, giving you steady energy instead of a rapid sugar crash!" },
