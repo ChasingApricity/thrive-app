@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Page } from '@/components/layout/page';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -316,22 +316,28 @@ function MythVsFactGame({ questions, onComplete }: { questions: Question[], onCo
   );
 }
 
-// GAME 2: Cortisol Slider (FIXED: PROPERLY FREEZES PROGRESS BAR WHEN SHIELD ACTIVE)
+// GAME 2: Cortisol Slider (ULTIMATE VERSION: Zoned Bar, Water Drops, Bite-Sized Tips)
 function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => void }) {
   const [level, setLevel] = useState(40);
   const [timeLeft, setTimeLeft] = useState(30);
   const [status, setStatus] = useState<'playing' | 'won' | 'lost'>('playing');
   
   const [shieldActive, setShieldActive] = useState(false);
-  const [waterCharges, setWaterCharges] = useState(1);
+  
+  // New "Earnable" Shield Mechanics
+  const [waterCharges, setWaterCharges] = useState(0); 
+  const [waterProgress, setWaterProgress] = useState(0);
+  const [waterDrop, setWaterDrop] = useState<{id: number, top: string, left: string} | null>(null);
+
   const [isHolding, setIsHolding] = useState(false);
   const [breathPhase, setBreathPhase] = useState<'Inhale' | 'Exhale'>('Inhale');
 
-  const isHoldingRef = React.useRef(isHolding);
+  const isHoldingRef = useRef(isHolding);
   useEffect(() => { isHoldingRef.current = isHolding; }, [isHolding]);
-  const shieldRef = React.useRef(shieldActive);
+  const shieldRef = useRef(shieldActive);
   useEffect(() => { shieldRef.current = shieldActive; }, [shieldActive]);
 
+  // Breathing Phase Timer
   useEffect(() => {
     if (!isHolding) {
       setBreathPhase('Inhale');
@@ -343,6 +349,27 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
     return () => clearInterval(cycle);
   }, [isHolding]);
 
+  // Water Drop Spawner (Every ~3.5 seconds if conditions met)
+  useEffect(() => {
+    if (status !== 'playing' || shieldActive || waterCharges >= 1) {
+      setWaterDrop(null);
+      return;
+    }
+    const spawner = setInterval(() => {
+      if (!waterDrop && Math.random() > 0.4) {
+        setWaterDrop({
+          id: Date.now(),
+          top: `${15 + Math.random() * 40}%`, // Keep in upper half so it doesn't block buttons
+          left: `${15 + Math.random() * 70}%`
+        });
+      } else if (waterDrop) {
+        setWaterDrop(null); // Despawn if missed
+      }
+    }, 3500);
+    return () => clearInterval(spawner);
+  }, [status, shieldActive, waterCharges, waterDrop]);
+
+  // Main Game Loop (Cortisol Rise & Fall)
   useEffect(() => {
     if (status !== 'playing') return;
     const timer = setInterval(() => {
@@ -355,18 +382,11 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
       });
 
       setLevel(l => {
-        // If shield is active, absolutely freeze the level from rising or falling
-        if (shieldRef.current) {
-          return l;
-        }
-
-        let newLevel = l;
-        newLevel += 10; 
-
-        if (isHoldingRef.current) {
-          newLevel -= 20; 
-        }
-
+        if (shieldRef.current) return l; // Frozen completely by shield!
+        
+        let newLevel = l + 10; // Natural rise
+        if (isHoldingRef.current) newLevel -= 20; // Active breath lowers it
+        
         if (newLevel >= 100) {
           setStatus('lost');
           return 100;
@@ -377,14 +397,38 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
     return () => clearInterval(timer);
   }, [status]);
 
+  const handleCollectDrop = (e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
+    setWaterDrop(null);
+    setWaterProgress(p => {
+      if (p + 1 >= 2) {
+        setWaterCharges(1);
+        return 0;
+      }
+      return p + 1;
+    });
+  };
+
   const useWater = () => {
     if (waterCharges > 0 && status === 'playing') {
       setWaterCharges(0);
       setShieldActive(true);
-      setLevel(l => Math.max(0, l - 25));
+      setLevel(l => Math.max(0, l - 25)); // Instant inflammation relief
       setTimeout(() => setShieldActive(false), 5000); // 5-second complete freeze
     }
   };
+
+  // Dynamic Bite-Sized Tips
+  let activeTip = "Watch the zones! Keep cortisol out of the red Danger area.";
+  if (shieldActive) {
+    activeTip = "🛡️ Cells hydrated! Physical stress response is frozen.";
+  } else if (isHolding) {
+    activeTip = breathPhase === 'Inhale' 
+      ? "🫁 Oxygen entering: signaling safety to your brain..." 
+      : "😌 Exhaling: slowing heart rate naturally...";
+  } else if (waterDrop) {
+    activeTip = "💧 Tap the floating water drop to build your shield!";
+  }
 
   if (status !== 'playing') {
     return (
@@ -395,8 +439,8 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
         </h3>
         <p className="text-sm font-medium text-gray-700 mb-8">
           {status === 'won' 
-            ? "By surviving the full 30-second breathing session, you successfully mastered your stress response!" 
-            : "When cortisol runs wild, your brain demands fast energy (sugar). Remember to use your Hydration Shield!"}
+            ? "By utilizing guided Inhale/Exhale pacing and maintaining hydration, you successfully buffered the stress response!" 
+            : "When cortisol runs wild, your brain demands fast energy (sugar). Remember to pace your breathing!"}
         </p>
         <Button onClick={() => onComplete(status === 'won' ? 4 : 0)} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">Continue</Button>
       </motion.div>
@@ -406,29 +450,56 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
   return (
     <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-lg border border-white/50 text-center relative overflow-hidden select-none">
       <p className="text-xs font-bold text-orange-500 uppercase tracking-wider mb-2">Keep it chill!</p>
-      <p className="text-sm font-medium text-gray-600 mb-6">Touch and hold orb to follow Inhale/Exhale cycles.</p>
       
-      <div className="flex justify-between font-bold text-gray-700 mb-2">
+      {/* 1. DANGER ZONE BAR */}
+      <div className="flex justify-between font-bold text-gray-700 mb-2 mt-4 relative z-10">
         <span>Cortisol Level</span>
-        <span className={level > 75 ? "text-red-500" : ""}>{level}%</span>
+        <span className={level >= 80 ? "text-red-600 font-extrabold" : level >= 50 ? "text-amber-500" : "text-emerald-600"}>
+          {level}%
+        </span>
       </div>
       
-      <div className={cn("h-6 w-full bg-gray-200 rounded-full overflow-hidden mb-8 shadow-inner border border-gray-100 transition-all", shieldActive ? "ring-4 ring-cyan-300" : "")}>
+      <div className="relative h-6 w-full bg-gray-200 rounded-full overflow-hidden mb-6 shadow-inner border border-gray-100 transition-all">
+        {/* Labeled Zones Overlay */}
+        <div className="absolute inset-0 flex text-[9px] font-extrabold uppercase tracking-wider text-gray-500 z-10 pointer-events-none mix-blend-color-burn opacity-70">
+          <div className="w-[50%] h-full flex items-center justify-start pl-3 border-r border-gray-400/30">Rest</div>
+          <div className="w-[30%] h-full flex items-center justify-center border-r border-gray-400/30">Alert</div>
+          <div className="w-[20%] h-full flex items-center justify-end pr-2 text-red-900">Danger</div>
+        </div>
+        
+        {/* Dynamic Progress Fill */}
         <motion.div 
-          className="h-full" 
+          className="h-full relative z-0" 
           animate={{ 
             width: `${level}%`, 
-            backgroundColor: shieldActive ? "#06B6D4" : (level < 50 ? "#22C55E" : level < 80 ? "#F59E0B" : "#EF4444") 
+            backgroundColor: shieldActive ? "#06B6D4" : (level < 50 ? "#34D399" : level < 80 ? "#FBBF24" : "#EF4444") 
           }} 
           transition={{ duration: 0.3 }} 
         />
       </div>
 
-      <div className="flex justify-center mb-8 relative h-32 items-center">
+      {/* 2. EARNABLE WATER DROP SPAWNER */}
+      <AnimatePresence>
+        {waterDrop && (
+          <motion.button
+            key={waterDrop.id}
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: [1, 1.2, 1] }}
+            exit={{ opacity: 0, scale: 0 }}
+            transition={{ duration: 0.4, scale: { repeat: Infinity, duration: 1 } }}
+            onPointerDown={handleCollectDrop}
+            className="absolute z-50 text-3xl drop-shadow-md cursor-pointer touch-none"
+            style={{ top: waterDrop.top, left: waterDrop.left }}
+          >
+            💧
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* The Biofeedback Orb */}
+      <div className="flex justify-center mb-4 relative h-32 items-center">
         <motion.div 
-          animate={{ 
-            scale: isHolding ? (breathPhase === 'Inhale' ? 1.3 : 0.85) : [1, 1.2, 1] 
-          }} 
+          animate={{ scale: isHolding ? (breathPhase === 'Inhale' ? 1.3 : 0.85) : [1, 1.15, 1] }} 
           transition={{ duration: isHolding ? 2 : 3, repeat: isHolding ? 0 : Infinity, ease: "easeInOut" }}
           onPointerDown={(e) => { e.preventDefault(); setIsHolding(true); }}
           onPointerUp={(e) => { e.preventDefault(); setIsHolding(false); }}
@@ -444,15 +515,41 @@ function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => voi
         </motion.div>
       </div>
 
+      {/* 3. BITE-SIZED DYNAMIC TIPS */}
+      <div className="h-10 flex items-center justify-center mb-2">
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={activeTip}
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            className={cn("text-[11px] font-bold px-4 text-center leading-tight", 
+              shieldActive ? "text-cyan-600" : level >= 80 ? "text-rose-600" : "text-indigo-600"
+            )}
+          >
+            {activeTip}
+          </motion.p>
+        </AnimatePresence>
+      </div>
+
+      {/* Shield Button / Progress */}
       <div className="flex justify-center mb-6 relative z-10">
         <Button 
           disabled={waterCharges === 0 || shieldActive}
           onClick={useWater} 
-          className={cn("font-bold h-12 w-full max-w-[200px] rounded-2xl shadow-sm transition-all text-sm", 
-            shieldActive ? "bg-cyan-400 text-white" : waterCharges > 0 ? "bg-cyan-100 hover:bg-cyan-200 text-cyan-800" : "bg-gray-100 text-gray-400"
+          className={cn("font-bold h-12 w-full max-w-[220px] rounded-2xl shadow-sm transition-all text-sm", 
+            shieldActive ? "bg-cyan-400 text-white" 
+            : waterCharges > 0 ? "bg-cyan-500 hover:bg-cyan-600 text-white ring-2 ring-cyan-200" 
+            : "bg-gray-100 text-gray-400"
           )}
         >
-          {shieldActive ? "Shield Active 🛡️" : waterCharges > 0 ? "Hydration Shield 💧" : "Water Empty"}
+          {shieldActive 
+            ? "Shield Active 🛡️" 
+            : waterCharges > 0 
+              ? "Use Hydration Shield 💧" 
+              : waterProgress === 1 
+                ? "Catch 1 more drop! 💧" 
+                : "Catch 2 drops for Shield"}
         </Button>
       </div>
       
