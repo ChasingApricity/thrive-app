@@ -316,7 +316,7 @@ function MythVsFactGame({ questions, onComplete }: { questions: Question[], onCo
   );
 }
 
-// GAME 2: Cortisol Slider
+// GAME 2: Cortisol Slider (THE ZEN EDITION)
 function CortisolSliderGame({ onComplete }: { onComplete: (score: number) => void }) {
   const [level, setLevel] = useState(40);
   const [timeLeft, setTimeLeft] = useState(50); 
@@ -787,10 +787,10 @@ function CircadianClockGame({ onComplete }: { onComplete: (score: number) => voi
   };
 
   const getSkyColor = (t: number) => {
-    if (t >= 6 && t < 8.5) return "from-orange-300 to-blue-400"; // Sunrise
-    if (t >= 8.5 && t < 16) return "from-sky-400 to-blue-300"; // Day
-    if (t >= 16 && t < 19.5) return "from-indigo-400 to-orange-400"; // Sunset
-    return "from-slate-900 to-indigo-900"; // Night
+    if (t >= 6 && t < 8.5) return "from-orange-300 to-blue-400"; 
+    if (t >= 8.5 && t < 16) return "from-sky-400 to-blue-300"; 
+    if (t >= 16 && t < 19.5) return "from-indigo-400 to-orange-400"; 
+    return "from-slate-900 to-indigo-900"; 
   };
 
   const getSunMoonProps = (t: number) => {
@@ -850,25 +850,20 @@ function CircadianClockGame({ onComplete }: { onComplete: (score: number) => voi
               <span className="font-extrabold text-indigo-900">{current.name}</span>
             </div>
             
-            {/* The Interactive Sky Window */}
             <div className={cn("relative w-full h-32 rounded-2xl mb-6 overflow-hidden transition-all duration-500 bg-gradient-to-b border border-black/5 shadow-inner", getSkyColor(time))}>
-              {/* Sun / Moon */}
               <div 
                 className="absolute text-4xl transition-all duration-200"
                 style={{ left: `${skyVisuals.percent}%`, bottom: '20%', transform: 'translateX(-50%)' }}
               >
                 {skyVisuals.emoji}
               </div>
-              {/* Ground Silhouette */}
               <div className="absolute bottom-0 w-full h-1/4 bg-black/20" />
             </div>
             
-            {/* Time Readout */}
             <div className="text-3xl font-extrabold text-gray-900 mb-4 tracking-tight">
               {formatTime(time)}
             </div>
 
-            {/* Range Slider */}
             <input 
               type="range" 
               min="6" max="24" step="0.5" 
@@ -891,7 +886,7 @@ function CircadianClockGame({ onComplete }: { onComplete: (score: number) => voi
               {lastCorrect ? "Perfect Timing!" : "Out of Sync!"}
             </h3>
             <p className="text-sm font-bold text-gray-800 mb-2">Ideal Window: {current.idealDisplay}</p>
-            <p className="text-sm font-medium text-gray-700 mb-8">{current.explanation}</p>
+            <p className="text-sm font-medium text-gray-700 mb-8">{lastCorrect ? current.success : current.fail}</p>
             <Button onClick={handleNext} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 rounded-xl text-white">
               {round < CIRCADIAN_HABITS.length - 1 ? 'Next Habit' : 'Finish Clock'}
             </Button>
@@ -907,7 +902,7 @@ function CircadianClockGame({ onComplete }: { onComplete: (score: number) => voi
   );
 }
 
-// GAME 6: The Swap It Challenge (DRAG & DROP WITH 5 ROUNDS!)
+// GAME 6: The Swap It Challenge
 type SwapRound = { craving: string; cravingEmoji: string; correct: string; correctEmoji: string; wrong: string; wrongEmoji: string; explanation: string };
 const SWAP_ROUNDS: SwapRound[] = [
   { craving: "Sugary Donut", cravingEmoji: "🍩", correct: "Apple & Almonds", correctEmoji: "🍎🥜", wrong: "Energy Drink", wrongEmoji: "🥤", explanation: "Apples and almonds provide fiber and healthy fats, giving you steady energy instead of a rapid sugar crash!" },
